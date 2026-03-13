@@ -36,6 +36,11 @@ function resolveFfmpeg() {
 const FFMPEG_BIN = resolveFfmpeg();
 
 require("dotenv").config();
+const PROJECT_ROOT = path.resolve(__dirname, "..");
+const IS_VERCEL = Boolean(process.env.VERCEL);
+const RUNTIME_TMP_ROOT = IS_VERCEL ? path.join("/tmp", "ashley-preview") : PROJECT_ROOT;
+const TMP_DIR = path.join(RUNTIME_TMP_ROOT, "tmp");
+const PUBLIC_DIR = path.join(PROJECT_ROOT, "public");
 
 const API_KEY = process.env.GEMINI_API_KEY;
 if (!API_KEY) {
@@ -320,7 +325,7 @@ async function uploadVideo(videoPath, fileManager, FileState) {
 // ── Extract frames at a given FPS using ffmpeg ───────────────────────────
 // Returns array of {path, timeSec} or null if ffmpeg unavailable
 function extractFramesAtFps(videoPath, fps = 5) {
-  const tmpDir = path.join(path.resolve(__dirname, ".."), "tmp", `frames-${Date.now()}`);
+  const tmpDir = path.join(TMP_DIR, `frames-${Date.now()}`);
   if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, {recursive: true});
 
   const result = spawnSync(
@@ -921,7 +926,7 @@ function stripUnknownImageElements(spec) {
   if (spec.background) {
     const bgRef = spec.background.imageFile || spec.background.asset;
     if (spec.background.type === "image" && bgRef) {
-      const bgPath = path.join(path.resolve(__dirname, ".."), "public", bgRef);
+      const bgPath = path.join(PUBLIC_DIR, bgRef);
       if (!fs.existsSync(bgPath)) {
         console.log(`   ⚠ Clearing non-existent background image "${bgRef}" — falling back to solid color`);
         delete spec.background.imageFile;
@@ -945,10 +950,9 @@ function stripUnknownImageElements(spec) {
 // clipStartSec / clipEndSec: explicit in/out points (takes priority over durationSecs)
 // Returns path to clipped file, or null if ffmpeg unavailable
 function clipToEndScreen(videoPath, durationSecs = 6, clipStartSec = null, clipEndSec = null) {
-  const tmpDir = path.join(path.resolve(__dirname, ".."), "tmp");
-  if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, {recursive: true});
+  if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR, {recursive: true});
   const ext = path.extname(videoPath) || ".mp4";
-  const outPath = path.join(tmpDir, `end-clip-${Date.now()}${ext}`);
+  const outPath = path.join(TMP_DIR, `end-clip-${Date.now()}${ext}`);
 
   let args;
   if (clipStartSec != null || clipEndSec != null) {
@@ -971,9 +975,8 @@ function clipToEndScreen(videoPath, durationSecs = 6, clipStartSec = null, clipE
 // ── Extract last video frame via ffmpeg ───────────────────────────────────
 // timeSec: absolute seek position in seconds (e.g. 12.5). When null, grabs 2s before end.
 function extractLastFrame(videoPath, timeSec = null) {
-  const tmpDir = path.join(path.resolve(__dirname, ".."), "tmp");
-  if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, {recursive: true});
-  const outPath = path.join(tmpDir, `last-frame-${Date.now()}.png`);
+  if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR, {recursive: true});
+  const outPath = path.join(TMP_DIR, `last-frame-${Date.now()}.png`);
 
   const seekArgs = timeSec != null
     ? ["-ss", String(timeSec), "-i", path.resolve(videoPath)]
@@ -992,9 +995,8 @@ function extractLastFrame(videoPath, timeSec = null) {
 // ── Transcode video to H.264 MP4 for browser preview ─────────────────────
 // Returns path to transcoded file, or null if ffmpeg fails.
 function transcodeForBrowser(videoPath) {
-  const tmpDir = path.join(path.resolve(__dirname, ".."), "tmp");
-  if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, {recursive: true});
-  const outPath = path.join(tmpDir, `browser-${Date.now()}.mp4`);
+  if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR, {recursive: true});
+  const outPath = path.join(TMP_DIR, `browser-${Date.now()}.mp4`);
   const result = spawnSync(
     FFMPEG_BIN,
     ["-i", path.resolve(videoPath),

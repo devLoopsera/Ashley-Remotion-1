@@ -13,7 +13,9 @@ const {execSync} = require("child_process");
 require("dotenv").config();
 
 const PROJECT_ROOT = path.resolve(__dirname, "..");
-const TMP_DIR = path.join(PROJECT_ROOT, "tmp");
+const IS_VERCEL = Boolean(process.env.VERCEL);
+const RUNTIME_TMP_ROOT = IS_VERCEL ? path.join("/tmp", "ashley-preview") : PROJECT_ROOT;
+const TMP_DIR = path.join(RUNTIME_TMP_ROOT, "tmp");
 
 /**
  * Static code validator — checks generated TSX for common errors WITHOUT

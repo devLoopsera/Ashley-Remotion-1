@@ -27,6 +27,9 @@ const {validateCode, runQACheck, findSavedReference, fixHandTypedLogo} = require
 require("dotenv").config();
 
 const PROJECT_ROOT = path.resolve(__dirname, "..");
+const IS_VERCEL = Boolean(process.env.VERCEL);
+const RUNTIME_TMP_ROOT = IS_VERCEL ? path.join("/tmp", "ashley-preview") : PROJECT_ROOT;
+const TMP_DIR = path.join(RUNTIME_TMP_ROOT, "tmp");
 const SCENES_DIR = path.join(PROJECT_ROOT, "src", "scenes");
 const PUBLIC_DIR = path.join(PROJECT_ROOT, "public");
 const ROOT_TSX = path.join(PROJECT_ROOT, "src", "Root.tsx");
@@ -450,7 +453,8 @@ if (require.main === module) {
       process.exit(1);
     }
     // Copy to a fixed, predictable path so the skill can display it
-    const previewPath = path.join(PROJECT_ROOT, "tmp", "preview-endcard.png");
+    if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR, {recursive: true});
+    const previewPath = path.join(TMP_DIR, "preview-endcard.png");
     fs.copyFileSync(framePath, previewPath);
     console.log(`PREVIEW_FRAME:${previewPath}`);
     process.exit(0);
