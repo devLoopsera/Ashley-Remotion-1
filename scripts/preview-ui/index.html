@@ -1344,12 +1344,28 @@
     }
 
 
+    async function waitForSeek(video, targetTimeSec) {
+      return new Promise((resolve) => {
+        const done = () => {
+          video.removeEventListener('seeked', done);
+          video.removeEventListener('error', done);
+          resolve();
+        };
+        video.addEventListener('seeked', done, {once: true});
+        video.addEventListener('error', done, {once: true});
+        video.currentTime = targetTimeSec;
+        // Safety fallback in case seek events are flaky on some browsers/codecs.
+        setTimeout(done, 700);
+      });
+    }
+
     async function captureFrameScreenshot(timeSec) {
       const video = document.getElementById('video-player');
       const img   = document.getElementById('frame-img');
       const t = timeSec != null ? timeSec : video.currentTime;
       framePointSec = t;
       if (IS_HOSTED_RUNTIME) {
+        await waitForSeek(video, t);
         if (!video.videoWidth || !video.videoHeight) return;
         const canvas = document.createElement('canvas');
         canvas.width = video.videoWidth;
@@ -1409,17 +1425,18 @@
       const blobUrl = URL.createObjectURL(file);
       video.src = blobUrl;
 
-      video.onloadedmetadata = () => {
-        video.currentTime = Math.max(0, video.duration - 7);
+      video.onloadedmetadata = async () => {
+        const initialTime = Math.max(0, video.duration - 7);
+        await waitForSeek(video, initialTime);
         if (inPointSec  == null) inPointSec  = 0;
         if (outPointSec == null) outPointSec = video.duration;
-        framePointSec = video.currentTime;
+        framePointSec = initialTime;
         capturedDurationFrames = Math.round(video.duration * 30);
         renderMarkerBar();
         if (IS_HOSTED_RUNTIME) {
           label.textContent = 'Scrub to where the end card starts, then capture';
           section.classList.remove('extracting');
-          captureFrameScreenshot(video.currentTime);
+          captureFrameScreenshot(initialTime);
         }
       };
       video.onerror = () => {
