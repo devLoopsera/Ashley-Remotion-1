@@ -322,7 +322,7 @@ app.post("/api/generate", async (req, res) => {
       imagePath: resolvedImagePath || null,
       videoPath: resolvedVideoPath || null,
       componentName,
-      skipWrite: false,
+      skipWrite: IS_VERCEL,
       logoPath: logoPath || null,
       bgImagePath: bgImagePath || null,
       bgColor: bgColor || null,

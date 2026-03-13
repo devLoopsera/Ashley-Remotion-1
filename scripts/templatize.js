@@ -164,8 +164,12 @@ async function templatize({imagePath, videoPath, componentName, specPath, skipWr
 
   // Save spec alongside the component so it can be used for regeneration
   const specFile = path.join(SCENES_DIR, `.spec-${componentName}.json`);
-  fs.writeFileSync(specFile, JSON.stringify(spec, null, 2));
-  console.log(`Spec saved to: src/scenes/.spec-${componentName}.json`);
+  if (!skipWrite) {
+    fs.writeFileSync(specFile, JSON.stringify(spec, null, 2));
+    console.log(`Spec saved to: src/scenes/.spec-${componentName}.json`);
+  } else {
+    console.log("Skipping spec write (dry run mode)");
+  }
 
   // Collect custom asset filenames so validateCode knows they're legitimate
   const extraValidAssets = [customLogoFile, customBgFile].filter(Boolean);
@@ -212,7 +216,7 @@ async function templatize({imagePath, videoPath, componentName, specPath, skipWr
     console.log("\n── Generated Code (dry run — not written) ────────────────────");
     console.log(code);
     console.log("─────────────────────────────────────────────────────────────\n");
-    return;
+    return {code, spec, componentName, dryRun: true};
   }
 
   // Write component file
