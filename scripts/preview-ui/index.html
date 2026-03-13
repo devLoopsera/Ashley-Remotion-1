@@ -1148,6 +1148,7 @@
   </div>
 
   <script>
+    const IS_HOSTED_RUNTIME = !['localhost', '127.0.0.1'].includes(window.location.hostname);
     let files = {screenshot: null, video: null, logo: null, bgImage: null};
     let assetChoices = {logos: [], bgImage: null, bgColor: null, fontFamily: null};
     let stagedVideoId = null;
@@ -1281,7 +1282,7 @@
         if (!dragging) return;
         const wasFrame = dragging === 'frame';
         dragging = null;
-        if (wasFrame && framePointSec != null && stagedVideoId) {
+        if (wasFrame && framePointSec != null && (stagedVideoId || IS_HOSTED_RUNTIME)) {
           captureFrameScreenshot(framePointSec);
         }
       });
@@ -1334,7 +1335,7 @@
           renderMarkerBar();
 
           // Re-capture frame after nudging the frame marker (debounced)
-          if (selectedMarker === 'frame' && stagedVideoId) {
+          if (selectedMarker === 'frame' && (stagedVideoId || IS_HOSTED_RUNTIME)) {
             clearTimeout(initMarkerBar._frameDebounce);
             initMarkerBar._frameDebounce = setTimeout(() => captureFrameScreenshot(framePointSec), 400);
           }
@@ -1344,11 +1345,29 @@
 
 
     async function captureFrameScreenshot(timeSec) {
-      if (!stagedVideoId) return;
       const video = document.getElementById('video-player');
       const img   = document.getElementById('frame-img');
       const t = timeSec != null ? timeSec : video.currentTime;
       framePointSec = t;
+      if (IS_HOSTED_RUNTIME) {
+        if (!video.videoWidth || !video.videoHeight) return;
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+        if (!blob) return;
+        const frameFile = new File([blob], `captured-frame-${Date.now()}.png`, {type: 'image/png'});
+        files.screenshot = frameFile;
+        capturedFrameId = null;
+        img.src = URL.createObjectURL(blob);
+        img.style.display = 'block';
+        renderMarkerBar();
+        return;
+      }
+      if (!stagedVideoId) return;
       try {
         const r = await fetch('/api/capture-frame', {
           method: 'POST',
@@ -1397,6 +1416,11 @@
         framePointSec = video.currentTime;
         capturedDurationFrames = Math.round(video.duration * 30);
         renderMarkerBar();
+        if (IS_HOSTED_RUNTIME) {
+          label.textContent = 'Scrub to where the end card starts, then capture';
+          section.classList.remove('extracting');
+          captureFrameScreenshot(video.currentTime);
+        }
       };
       video.onerror = () => {
         // Browser can't decode the video (e.g. ProRes) — show transcoding notice
@@ -1411,6 +1435,10 @@
         }
       };
       video.ontimeupdate = renderMarkerBar;
+
+      if (IS_HOSTED_RUNTIME) {
+        return;
+      }
 
       try {
         const fd = new FormData();
