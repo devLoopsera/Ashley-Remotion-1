@@ -1,0 +1,78 @@
+{
+  "durationFrames": 150,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "background": {
+    "type": "solid",
+    "color": "#232d43"
+  },
+  "elements": [
+    {
+      "id": "logo-group",
+      "type": "group",
+      "position": {
+        "top": 484,
+        "left": 1448
+      },
+      "children": [
+        {
+          "id": "logo-icon",
+          "type": "image",
+          "asset": "HouseIcon_primary.png",
+          "size": {
+            "height": 138
+          }
+        },
+        {
+          "id": "logo-wordmark",
+          "type": "image",
+          "asset": "Ashley-Wordmark-White_PNG_u7iaxp.png",
+          "size": {
+            "height": 117
+          }
+        }
+      ],
+      "layout": {
+        "direction": "row",
+        "gap": 0,
+        "alignItems": "center"
+      }
+    },
+    {
+      "id": "tagline",
+      "type": "text",
+      "content": "shop in-store • online",
+      "isTextProp": true,
+      "propName": "tagline",
+      "style": {
+        "fontFamily": "Chesna Grotesk",
+        "fontSize": 36,
+        "fontWeight": 600,
+        "color": "#FFFFFF",
+        "letterSpacing": 2,
+        "textAlign": "center"
+      },
+      "position": {
+        "belowElement": "logo-group",
+        "marginTop": 20
+      }
+    }
+  ],
+  "animations": [
+    {
+      "targets": [
+        "logo-group",
+        "tagline"
+      ],
+      "type": "slide-in-right",
+      "startFrame": 0,
+      "postEffect": null
+    }
+  ],
+  "textContent": {
+    "tagline": "shop in-store • online",
+    "disclaimer": null
+  },
+  "notes": "The logo and tagline are positioned on the right side of the screen, not centered horizontally as the template might suggest."
+}

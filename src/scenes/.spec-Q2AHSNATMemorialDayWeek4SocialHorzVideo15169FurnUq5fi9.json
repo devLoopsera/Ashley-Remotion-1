@@ -1,0 +1,109 @@
+{
+  "durationFrames": 150,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "background": {
+    "type": "solid",
+    "color": "#ffffff"
+  },
+  "elements": [
+    {
+      "id": "logo-group",
+      "type": "group",
+      "position": {
+        "topPercent": 41.67,
+        "centerHorizontal": true
+      },
+      "children": [
+        {
+          "id": "logo-icon",
+          "type": "image",
+          "asset": "HouseIcon_primary.png",
+          "size": {
+            "height": 72
+          }
+        },
+        {
+          "id": "logo-wordmark",
+          "type": "image",
+          "asset": "Ashley-Wordmark-Black_PNG_u7iaxp.png",
+          "size": {
+            "height": 61
+          }
+        },
+        {
+          "id": "tld",
+          "type": "text",
+          "content": ".com",
+          "style": {
+            "fontFamily": "Chesna Grotesk",
+            "fontSize": 110,
+            "fontWeight": 600,
+            "color": "#f58220",
+            "letterSpacing": 0
+          }
+        }
+      ],
+      "layout": {
+        "direction": "row",
+        "gap": 5,
+        "alignItems": "center"
+      }
+    },
+    {
+      "id": "cta",
+      "type": "text",
+      "content": "shop now!",
+      "position": {
+        "belowElement": "logo-group",
+        "marginTop": 55,
+        "centerHorizontal": true
+      },
+      "style": {
+        "fontFamily": "Chesna Grotesk",
+        "fontSize": 60,
+        "fontWeight": 400,
+        "color": "#3c3c3b",
+        "letterSpacing": 0,
+        "textAlign": "center"
+      }
+    },
+    {
+      "id": "disclaimer",
+      "type": "text",
+      "content": "©2022 Ashley Furniture Industries, LLC. All rights reserved.",
+      "isTextProp": true,
+      "propName": "disclaimer",
+      "position": {
+        "bottomPx": 40,
+        "centerHorizontal": true
+      },
+      "style": {
+        "fontFamily": "Chesna Grotesk",
+        "fontSize": 20,
+        "fontWeight": 400,
+        "color": "#6d6e71",
+        "letterSpacing": 0.5,
+        "textAlign": "center"
+      }
+    }
+  ],
+  "animations": [
+    {
+      "targets": [
+        "logo-group",
+        "cta",
+        "disclaimer"
+      ],
+      "type": "fade-in",
+      "startFrame": 0,
+      "postEffect": null
+    }
+  ],
+  "textContent": {
+    "tagline": null,
+    "disclaimer": "©2022 Ashley Furniture Industries, LLC. All rights reserved."
+  },
+  "notes": "The CTA 'shop now!' is rendered inside a rectangular button with a thin dark border. This styling is not captured as the schema does not support borders."
+}

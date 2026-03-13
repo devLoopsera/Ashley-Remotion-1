@@ -1,0 +1,120 @@
+{
+  "durationFrames": 150,
+  "fps": 30,
+  "width": 1920,
+  "height": 1920,
+  "background": {
+    "type": "solid",
+    "color": "#FDFDFD"
+  },
+  "elements": [
+    {
+      "id": "logo-group",
+      "type": "group",
+      "position": {
+        "topPx": 200,
+        "rightPx": 70
+      },
+      "children": [
+        {
+          "id": "logo-icon",
+          "type": "image",
+          "asset": "HouseIcon_primary.png",
+          "size": {
+            "height": 150
+          }
+        },
+        {
+          "id": "logo-icon",
+          "type": "image",
+          "asset": "HouseIcon_primary.png",
+          "size": {
+            "height": 98
+          }
+        },
+        {
+          "id": "logo-wordmark",
+          "type": "image",
+          "asset": "Ashley-Wordmark-Black_PNG_u7iaxp.png",
+          "size": {
+            "height": 83
+          }
+        }
+      ],
+      "layout": {
+        "direction": "row",
+        "gap": 30,
+        "alignItems": "center"
+      }
+    },
+    {
+      "id": "tagline",
+      "type": "text",
+      "content": "shop in-store & online",
+      "isTextProp": true,
+      "propName": "tagline",
+      "style": {
+        "fontFamily": "Chesna Grotesk",
+        "fontSize": 72,
+        "fontWeight": 600,
+        "color": "#282828",
+        "letterSpacing": "0.02em",
+        "textAlign": "right"
+      },
+      "position": {
+        "belowElement": "logo-group",
+        "marginTop": 30
+      }
+    },
+    {
+      "id": "disclaimer",
+      "type": "text",
+      "content": "Powered by Sleeptracker-AI®.",
+      "isTextProp": true,
+      "propName": "disclaimer",
+      "position": {
+        "bottomPx": 40,
+        "rightPx": 70
+      },
+      "style": {
+        "fontFamily": "Chesna Grotesk",
+        "fontSize": 36,
+        "fontWeight": 400,
+        "color": "#282828",
+        "letterSpacing": "0.01em",
+        "textAlign": "right"
+      }
+    }
+  ],
+  "animations": [
+    {
+      "targets": [
+        "disclaimer"
+      ],
+      "type": "fade-in",
+      "startFrame": 0,
+      "postEffect": null
+    },
+    {
+      "targets": [
+        "logo-group"
+      ],
+      "type": "fade-in",
+      "startFrame": 6,
+      "postEffect": "scale-throb"
+    },
+    {
+      "targets": [
+        "tagline"
+      ],
+      "type": "fade-in",
+      "startFrame": 30,
+      "postEffect": null
+    }
+  ],
+  "textContent": {
+    "tagline": "shop in-store & online",
+    "disclaimer": "Powered by Sleeptracker-AI®."
+  },
+  "notes": "The background is a product scene with a strong white vignette on the top right where the text elements are located."
+}

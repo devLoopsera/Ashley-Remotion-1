@@ -1,0 +1,126 @@
+{
+  "durationFrames": 123,
+  "fps": 30,
+  "width": 1080,
+  "height": 1920,
+  "background": {
+    "type": "solid",
+    "color": "#F2F2F2"
+  },
+  "elements": [
+    {
+      "id": "logo-group",
+      "type": "group",
+      "position": {
+        "topPercent": 38,
+        "centerHorizontal": true
+      },
+      "children": [
+        {
+          "id": "logo-icon",
+          "type": "image",
+          "asset": "HouseIcon_primary.png",
+          "size": {
+            "height": 160
+          }
+        },
+        {
+          "id": "logo-wordmark",
+          "type": "image",
+          "asset": "Ashley-Wordmark-Black_PNG_u7iaxp.png",
+          "size": {
+            "height": 120
+          }
+        }
+      ],
+      "layout": {
+        "direction": "column",
+        "gap": 30,
+        "alignItems": "center"
+      }
+    },
+    {
+      "id": "tagline-box",
+      "type": "group",
+      "position": {
+        "belowElement": "logo-group",
+        "marginTop": 70,
+        "centerHorizontal": true
+      },
+      "children": [
+        {
+          "id": "tagline",
+          "type": "text",
+          "content": "COMPRA EN TIENDA Y EN LÍNEA",
+          "isTextProp": true,
+          "propName": "tagline",
+          "style": {
+            "fontFamily": "Chesna Grotesk",
+            "fontSize": 48,
+            "fontWeight": 600,
+            "color": "#333333",
+            "letterSpacing": 2,
+            "textTransform": "uppercase",
+            "textAlign": "center",
+            "backgroundColor": "#E87722",
+            "padding": {
+              "top": 20,
+              "bottom": 20,
+              "left": 60,
+              "right": 60
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "disclaimer",
+      "type": "text",
+      "content": null,
+      "isTextProp": true,
+      "propName": "disclaimer",
+      "position": {
+        "bottomPx": 60,
+        "centerHorizontal": true
+      },
+      "style": {
+        "fontFamily": "Chesna Grotesk",
+        "fontSize": 24,
+        "fontWeight": 400,
+        "color": "#595959",
+        "letterSpacing": 0.5,
+        "textAlign": "center"
+      }
+    }
+  ],
+  "animations": [
+    {
+      "targets": [
+        "logo-group"
+      ],
+      "type": "fade-in",
+      "startFrame": 15,
+      "postEffect": null
+    },
+    {
+      "targets": [
+        "tagline-box"
+      ],
+      "type": "scale-in",
+      "startFrame": 15,
+      "postEffect": null
+    },
+    {
+      "targets": [
+        "disclaimer"
+      ],
+      "type": "fade-in",
+      "startFrame": 15,
+      "postEffect": null
+    }
+  ],
+  "textContent": {
+    "tagline": "COMPRA EN TIENDA Y EN LÍNEA",
+    "disclaimer": "© 2024 Ashley Global Retail, LLC. Todos los derechos reservados."
+  }
+}
