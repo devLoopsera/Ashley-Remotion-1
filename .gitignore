@@ -9,3 +9,5 @@ yarn-error.log*
 pnpm-debug.log*
 public/*.mov
 public/*.mp4
+
+.vercel
