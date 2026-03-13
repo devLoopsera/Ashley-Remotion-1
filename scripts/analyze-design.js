@@ -39,8 +39,14 @@ require("dotenv").config();
 
 const API_KEY = process.env.GEMINI_API_KEY;
 if (!API_KEY) {
-  console.error("Error: GEMINI_API_KEY is not set. Add it to your .env file.");
-  process.exit(1);
+  console.warn("Warning: GEMINI_API_KEY is not set. Analysis endpoints will fail until configured.");
+}
+
+function requireApiKey() {
+  if (!API_KEY) {
+    throw new Error("GEMINI_API_KEY is not set. Configure it in environment variables.");
+  }
+  return API_KEY;
 }
 
 // ── Pass 1: Layout prompt (screenshot only) ──────────────────────────────
@@ -517,7 +523,7 @@ async function analyzeLayout(imagePath, {GoogleGenerativeAI}) {
   console.log(`\n── Pass 1: Analyzing layout from screenshot ─────────────────`);
   console.log(`   ${path.basename(absPath)}`);
 
-  const genAI = new GoogleGenerativeAI(API_KEY);
+  const genAI = new GoogleGenerativeAI(requireApiKey());
   const model = genAI.getGenerativeModel({model: "gemini-2.5-pro"});
 
   const imageData = fs.readFileSync(absPath).toString("base64");
@@ -547,7 +553,7 @@ async function analyzeLayout(imagePath, {GoogleGenerativeAI}) {
 async function analyzeAnimations(videoPath, layoutSpec, {GoogleGenerativeAI, GoogleAIFileManager, FileState}, clipStartSec = null, clipEndSec = null) {
   console.log(`\n── Pass 2: Analyzing animations from video ──────────────────`);
 
-  const genAI = new GoogleGenerativeAI(API_KEY);
+  const genAI = new GoogleGenerativeAI(requireApiKey());
   const model = genAI.getGenerativeModel({model: "gemini-2.5-pro"});
 
   // Clip to marker range, or fall back to last 7s
@@ -589,7 +595,7 @@ async function analyzeAnimations(videoPath, layoutSpec, {GoogleGenerativeAI, Goo
   } else {
     // Fallback: upload video to File API (1fps, less precise)
     console.log(`   Frame extraction unavailable — falling back to video upload (1fps)`);
-    const fileManager = new GoogleAIFileManager(API_KEY);
+    const fileManager = new GoogleAIFileManager(requireApiKey());
     const {uri, name} = await uploadVideo(analysisPath, fileManager, FileState);
     const prompt = buildAnimationPrompt(layoutSpec, 7, 1);
     result = await model.generateContent([
@@ -1128,9 +1134,9 @@ Font: "Chesna Grotesk" (weights 400 and 600)
 Return ONLY the JSON. No other text.`;
 
 async function analyzeFromVideo(videoPath, {GoogleGenerativeAI, GoogleAIFileManager, FileState}) {
-  const genAI = new GoogleGenerativeAI(API_KEY);
+  const genAI = new GoogleGenerativeAI(requireApiKey());
   const model = genAI.getGenerativeModel({model: "gemini-2.5-pro"});
-  const fileManager = new GoogleAIFileManager(API_KEY);
+  const fileManager = new GoogleAIFileManager(requireApiKey());
 
   const {uri, name} = await uploadVideo(videoPath, fileManager, FileState);
 

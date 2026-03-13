@@ -23,11 +23,13 @@ const {runQACheck, findSavedReference, fixHandTypedLogo} = require("./qa-check")
 const {extractLastFrame, transcodeForBrowser, enforceLogoSplit} = require("./analyze-design");
 
 const PORT = 3001;
-const TMP_DIR = path.join(__dirname, "..", "tmp");
+const IS_VERCEL = Boolean(process.env.VERCEL);
+const RUNTIME_TMP_ROOT = IS_VERCEL ? path.join("/tmp", "ashley-preview") : path.join(__dirname, "..");
+const TMP_DIR = path.join(RUNTIME_TMP_ROOT, "tmp");
 const UI_DIR = path.join(__dirname, "preview-ui");
 const SCENES_DIR = path.join(__dirname, "..", "src", "scenes");
 const PUBLIC_DIR = path.join(__dirname, "..", "public");
-const TEMPLATES_DIR = path.join(__dirname, "..", "templates");
+const TEMPLATES_DIR = path.join(RUNTIME_TMP_ROOT, "templates");
 
 const BRAND_LOGO_RE = /Ashley-Logo|HouseIcon/i;
 const IMAGE_EXTS = new Set([".png", ".jpg", ".jpeg", ".webp"]);
@@ -748,8 +750,12 @@ app.get("/api/component-code/:name", (req, res) => {
   res.type("text/plain").send(fs.readFileSync(file, "utf8"));
 });
 
-// ── Start ──────────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`\n  Ashley Preview Server  →  http://localhost:${PORT}`);
-  console.log(`  Remotion Studio        →  http://localhost:3000  (run: npm run dev)\n`);
-});
+// ── Start / Export ─────────────────────────────────────────────────────────
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`\n  Ashley Preview Server  →  http://localhost:${PORT}`);
+    console.log(`  Remotion Studio        →  http://localhost:3000  (run: npm run dev)\n`);
+  });
+} else {
+  module.exports = app;
+}

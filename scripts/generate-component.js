@@ -15,8 +15,14 @@ require("dotenv").config();
 
 const API_KEY = process.env.GEMINI_API_KEY;
 if (!API_KEY) {
-  console.error("Error: GEMINI_API_KEY is not set. Add it to your .env file.");
-  process.exit(1);
+  console.warn("Warning: GEMINI_API_KEY is not set. Generation endpoints will fail until configured.");
+}
+
+function requireApiKey() {
+  if (!API_KEY) {
+    throw new Error("GEMINI_API_KEY is not set. Configure it in environment variables.");
+  }
+  return API_KEY;
 }
 
 // ── Few-shot example: EndCard24682 (the reference implementation) ──────────
@@ -429,7 +435,7 @@ async function generateComponent(spec, componentName, options = {}) {
     process.exit(1);
   }
 
-  const genAI = new GoogleGenerativeAI(API_KEY);
+  const genAI = new GoogleGenerativeAI(requireApiKey());
   const model = genAI.getGenerativeModel({
     model: "gemini-2.5-pro",
     systemInstruction: SYSTEM_PROMPT,
