@@ -43,20 +43,36 @@ function validateCode(code, spec, extraValidAssets = []) {
     );
   }
 
-  // 3. Logo must use staticFile() + Img — never text or SVG
-  if (!code.includes("staticFile(")) {
+  // 3. Logo must use SVG components — never raw text, never PNG
+  const usesSVGLogo = code.includes("AshleyHouseIcon") || code.includes("AshleyWordmark");
+  if (!usesSVGLogo) {
     issues.push(
-      "No staticFile() found — logo images must use <Img src={staticFile('HouseIcon_white.png')} />, never text characters or SVG"
+      'No logo found — use SVG components: import {AshleyHouseIcon, AshleyWordmark} from "../components/logo". ' +
+      'All PNG logo files are deleted. Do NOT use staticFile() for any logo asset.'
     );
   }
 
-  // 3b. "ASHLEY" must NEVER appear as typed JSX text — wordmark must come from a PNG image.
+  // 3b. "ASHLEY" must NEVER appear as typed JSX text
   if (/>\s*ASHLEY\s*<|\{["']ASHLEY["']\}/i.test(code)) {
     issues.push(
       'HAND-TYPED LOGO TEXT: the code contains "ASHLEY" as a typed JSX text node. ' +
-      'This is strictly forbidden — use an <Img> with the wordmark PNG instead: ' +
-      'staticFile("Ashley-Wordmark-White_PNG_u7iaxp.png") on dark backgrounds, ' +
-      'staticFile("Ashley-Wordmark-Black_PNG_u7iaxp.png") on light backgrounds.'
+      'This is strictly forbidden — use <AshleyWordmark color="#FFFFFF" height={33} />.'
+    );
+  }
+
+  // 3c. Logo PNG files are all deleted — staticFile() with any logo filename will crash at runtime
+  if (/staticFile\s*\(\s*["'](Ashley-Logo-|HouseIcon_|Ashley-Wordmark-)/.test(code)) {
+    issues.push(
+      'PNG LOGO IN staticFile(): All Ashley logo PNG files (Ashley-Logo-*, HouseIcon_*.png, Ashley-Wordmark-*.png) ' +
+      'are deleted and will crash at runtime. Replace with SVG components: ' +
+      'import {AshleyHouseIcon, AshleyWordmark} from "../components/logo".'
+    );
+  }
+
+  // 3c. If using SVG logo, must have the import
+  if (usesSVGLogo && !code.includes('../components/logo')) {
+    issues.push(
+      'SVG logo components used but import is missing. Add: import {AshleyHouseIcon, AshleyWordmark, AshleyHorizontalLogo, AshleyVerticalLogo} from "../components/logo";'
     );
   }
 
@@ -330,18 +346,9 @@ function validateCode(code, spec, extraValidAssets = []) {
 
   // 9. All staticFile("literal") calls must reference a known brand asset or bg-* background.
   //    Invented filenames (e.g. "sealy_logo.png", "bedroom.jpg") crash at runtime.
-  const KNOWN_STATIC_FILES = new Set([
-    "HouseIcon_white.png", "HouseIcon_black.png", "HouseIcon_primary.png",
-    "Ashley-Wordmark-White_PNG_u7iaxp.png", "Ashley-Wordmark-Black_PNG_u7iaxp.png",
-    "Ashley-Logo-Horizontal-OneColor-White_PNG_xyxx3x.png",
-    "Ashley-Logo-Horizontal-OneColor-Black_PNG_xjkrnw.png",
-    "Ashley-Logo-Horizontal-OrgHouse-WhiteType_PNG_rmwwsy.png",
-    "Ashley-Logo-Horizontal_PNG_et54ya.png",
-    "Ashley-Logo-Vertical-OneColor-White_PNG_ekcys6.png",
-    "Ashley-Logo-Vertical-OneColor-Black_PNG_u7iaxp.png",
-    "Ashley-Logo-Vertical-OrgHouse-WhiteType_PNG_wjh3mt.png",
-    "Ashley-Logo-Vertical_PNG_gztzfy.png",
-  ]);
+  // Logo PNG files are all deprecated — using them is an error, not a known asset.
+  // Any Ashley-Logo-*, HouseIcon_*, or Ashley-Wordmark-* in staticFile() must be replaced with SVG components.
+  const KNOWN_STATIC_FILES = new Set([]);
   const staticLiterals = [...code.matchAll(/staticFile\s*\(\s*["']([^"']+)["']\s*\)/g)].map((m) => m[1]);
   for (const file of staticLiterals) {
     // Skip known brand assets and pipeline-managed assets that exist on disk or in extraValidAssets
@@ -615,18 +622,59 @@ function fixHandTypedLogo(code) {
     const b = parseInt(hex.slice(4, 6), 16);
     isDark = (0.299 * r + 0.587 * g + 0.114 * b) / 255 <= 0.5;
   }
-  const wordmark = isDark
-    ? "Ashley-Wordmark-White_PNG_u7iaxp.png"
-    : "Ashley-Wordmark-Black_PNG_u7iaxp.png";
-  const imgTag = `<Img src={staticFile("${wordmark}")} style={{height: 33, width: "auto"}} />`;
+  const wordmarkColor = isDark ? "#FFFFFF" : "#333333";
+  const svgTag = `<AshleyWordmark color="${wordmarkColor}" height={33} />`;
 
   let fixed = code;
 
-  // Replace <ANY_TAG ...>ASHLEY</ANY_TAG> → <Img> wordmark (handles multiline JSX, any tag type)
-  fixed = fixed.replace(/<(\w+)\b[\s\S]*?>\s*ASHLEY\s*<\/\1>/gi, imgTag);
+  // Replace <ANY_TAG ...>ASHLEY</ANY_TAG> → AshleyWordmark SVG component (handles multiline JSX, any tag type)
+  fixed = fixed.replace(/<(\w+)\b[\s\S]*?>\s*ASHLEY\s*<\/\1>/gi, svgTag);
 
   // Replace {'ASHLEY'} or {"ASHLEY"} expression nodes
-  fixed = fixed.replace(/\{["']ASHLEY["']\}/gi, imgTag);
+  fixed = fixed.replace(/\{["']ASHLEY["']\}/gi, svgTag);
+
+  // If we inserted AshleyWordmark, ensure the import exists
+  if (fixed !== code && !fixed.includes('../components/logo')) {
+    fixed = fixed.replace(
+      /(import\s+.*from\s+["']remotion["'];?\s*\n)/,
+      '$1import {AshleyHouseIcon, AshleyWordmark, AshleyHorizontalLogo, AshleyVerticalLogo} from "../components/logo";\n'
+    );
+  }
+
+  // Convert ALL PNG logo <Img> tags to SVG components — no PNG logos are allowed at all
+
+  // Combined Ashley-Logo-* (Horizontal or Vertical) → pre-built SVG preset component
+  const combinedLogoRegex = /<Img\s[^>]*src=\{staticFile\(["']Ashley-Logo-(Horizontal|Vertical)[^"']*["']\)\}[^>]*style=\{\{[^}]*height:\s*(\d+)[^}]*\}\}[^/]*\/>/g;
+  fixed = fixed.replace(combinedLogoRegex, (match, orientation, height) => {
+    const h = Number(height);
+    const wordColor = isDark ? "#FFFFFF" : "#333333";
+    if (orientation === "Vertical") {
+      return `<AshleyVerticalLogo height={${h}} iconColor="#E87722" wordmarkColor="${wordColor}" />`;
+    }
+    return `<AshleyHorizontalLogo height={${h}} iconColor="#E87722" wordmarkColor="${wordColor}" />`;
+  });
+
+  // HouseIcon_*.png → AshleyHouseIcon
+  const pngIconRegex = /<Img\s[^>]*src=\{staticFile\(["']HouseIcon_(primary|white|black)\.png["']\)\}[^>]*style=\{\{[^}]*height:\s*(\d+)[^}]*\}\}[^/]*\/>/g;
+  fixed = fixed.replace(pngIconRegex, (match, variant, height) => {
+    const color = variant === "white" ? "#FFFFFF" : variant === "black" ? "#333333" : "#E87722";
+    return `<AshleyHouseIcon color="${color}" height={${height}} />`;
+  });
+
+  // Ashley-Wordmark-*.png → AshleyWordmark
+  const pngWordmarkRegex = /<Img\s[^>]*src=\{staticFile\(["']Ashley-Wordmark-(White|Black)_PNG_u7iaxp\.png["']\)\}[^>]*style=\{\{[^}]*height:\s*(\d+)[^}]*\}\}[^/]*\/>/g;
+  fixed = fixed.replace(pngWordmarkRegex, (match, variant, height) => {
+    const color = variant === "White" ? "#FFFFFF" : "#333333";
+    return `<AshleyWordmark color="${color}" height={${height}} />`;
+  });
+
+  // If we replaced PNG logos with SVG, ensure the import exists
+  if (fixed !== code && !fixed.includes('../components/logo')) {
+    fixed = fixed.replace(
+      /(import\s+.*from\s+["']remotion["'];?\s*\n)/,
+      '$1import {AshleyHouseIcon, AshleyWordmark, AshleyHorizontalLogo, AshleyVerticalLogo} from "../components/logo";\n'
+    );
+  }
 
   return {code: fixed, changed: fixed !== code};
 }

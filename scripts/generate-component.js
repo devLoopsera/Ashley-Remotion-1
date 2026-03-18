@@ -291,6 +291,10 @@ const scaleProgress = spring({frame: frame - startFrame, fps, config: {damping: 
 // Apply: style={{ opacity: scaleProgress, transform: \`scale(\${scaleProgress})\` }}
 \`\`\`
 
+**type: "logo-reveal"** — the entire logo group should be replaced with <AshleyLogoReveal>.
+Do NOT write spring() or interpolate() for this — AshleyLogoReveal handles all animation internally.
+Pass tagline and disclaimer from props. Match backgroundColor to spec.background.color.
+
 **postEffect: "scale-throb"** — add AFTER the entrance spring, on the same element
 \`\`\`tsx
 // Start throb ~20 frames after entrance begins
@@ -341,35 +345,74 @@ fontFamily: CUSTOM_FONT
 \`\`\`
 When CUSTOM FONT OVERRIDE is active: import useState and useEffect from "react"; import delayRender, continueRender from "remotion"; do NOT import CHESNA or useFonts.
 
-### Logo — Split house icon + ASHLEY wordmark image (DEFAULT)
+### Logo — SVG Components (DEFAULT)
 
-The spec will have a "logo-group" with TWO children, BOTH image elements:
-1. "logo-icon" — HouseIcon_*.png (the house shape)
-2. "logo-wordmark" — Ashley-Wordmark-*_PNG_u7iaxp.png (the standalone "ASHLEY" wordmark PNG)
+The Ashley logo is rendered using inline SVG React components — NOT PNG images. This allows full animation control (stroke draws, per-letter dispersion, vertex-based pulse).
 
 STRICT RULE: Do NOT render "ASHLEY" as typed text in JSX. No <p>, <span>, <div>, or any element
-whose text content is "ASHLEY" or "Ashley". Both parts of the logo are <Img> elements.
+whose text content is "ASHLEY" or "Ashley". Use the AshleyWordmark SVG component.
 
-Render as a flex container matching the logo-group's layout direction:
-- direction "row": house icon LEFT, wordmark RIGHT (side by side)
-- direction "column": house icon on TOP, wordmark BELOW (stacked)
+STRICT RULE: NEVER USE PNG FOR THE LOGO. All logo files (Ashley-Logo-Horizontal-*, Ashley-Logo-Vertical-*, HouseIcon_*.png, Ashley-Wordmark-*.png) are DELETED and do not exist. Any staticFile() call referencing these will crash at runtime.
 
-Example JSX for split logo:
-  <div style={{display: "flex", flexDirection: "row", alignItems: "center", gap: 12}}>
-    <Img src={staticFile("HouseIcon_primary.png")} style={{height: 60, width: "auto"}} />
-    <Img src={staticFile("Ashley-Wordmark-White_PNG_u7iaxp.png")} style={{height: 33, width: "auto"}} />
+### Pre-built logo presets (USE THESE — do not manually compose icon + wordmark)
+
+Import:
+\`\`\`tsx
+import {AshleyHorizontalLogo, AshleyVerticalLogo, AshleyHouseIcon, AshleyWordmark} from "../components/logo";
+\`\`\`
+
+**AshleyHorizontalLogo** — house icon LEFT, wordmark RIGHT (side by side)
+- Ratios locked from official brand: iconHeight = wordmarkHeight × 0.94, gap = iconHeight × 0.25
+- Props: height (wordmark height), iconColor (default "#E87722"), wordmarkColor (default "#FFFFFF")
+- Example: \`<AshleyHorizontalLogo height={100} iconColor="#E87722" wordmarkColor="#FFFFFF" />\`
+
+**AshleyVerticalLogo** — house icon centered on TOP, wordmark BELOW (stacked)
+- Ratios locked from official brand: iconHeight = wordmarkHeight × 1.55, gap = wordmarkHeight × 0.15
+- Props: height (wordmark height), iconColor (default "#E87722"), wordmarkColor (default "#FFFFFF")
+- Example: \`<AshleyVerticalLogo height={60} iconColor="#E87722" wordmarkColor="#FFFFFF" />\`
+
+Use \`AshleyHorizontalLogo\` when the spec shows a horizontal logo layout.
+Use \`AshleyVerticalLogo\` when the spec shows a vertical/stacked logo layout.
+Use \`AshleyHouseIcon\` + \`AshleyWordmark\` individually ONLY when you need to animate them separately (e.g. only the icon throbs, or per-letter wordmark animation).
+
+**AshleyLogoReveal** — full choreographed logo reveal (stroke draw → letter rise → tagline → pulse)
+- USE THIS when any animation in the spec has type: "logo-reveal" targeting the logo or logo-group
+- This is a FULL-SCREEN component — it renders its own AbsoluteFill background. Do NOT nest it in a positioned div.
+- It internally handles all logo animation — do NOT also render AshleyHorizontalLogo or AshleyVerticalLogo
+- All 8 props are optional (sensible defaults exist):
+  tagline, disclaimer, houseColor, wordmarkColor, taglineBarColor, taglineTextColor, disclaimerColor, backgroundColor
+- Extract tagline/disclaimer from spec.textContent; extract colors from spec.background
+- Example:
+  \`<AshleyLogoReveal
+    tagline={tagline}
+    disclaimer={disclaimer}
+    houseColor="#E87722"
+    wordmarkColor="#FFFFFF"
+    backgroundColor="#1a1a1a"
+  />\`
+- Import: import {AshleyLogoReveal} from "../components/logo";
+
+**Individual components** (only when separate animation is needed):
+1. **AshleyHouseIcon** — inline SVG house icon. Props: color ("#E87722" orange / "#FFFFFF" white / "#333333" dark), height, innerColor
+2. **AshleyWordmark** — inline SVG "ASHLEY". Props: color ("#FFFFFF" dark bg / "#333333" light bg), height, letterStyles (per-letter animation)
+
+### Logo Pulse Animation
+Wrap the preset (or just the icon) in an animated div:
+\`\`\`tsx
+const pulseProgress = spring({frame: frame - 60, fps, config: {damping: 8, mass: 0.6}});
+const pulseScale = interpolate(pulseProgress, [0, 0.5, 1], [1.0, 1.15, 1.0]);
+// Whole logo throbs:
+<div style={{transform: \`scale(\${pulseScale})\`}}>
+  <AshleyVerticalLogo height={60} iconColor="#E87722" wordmarkColor="#FFFFFF" />
+</div>
+// Only house icon throbs (use individual components):
+<div style={{display:"flex", flexDirection:"column", alignItems:"center"}}>
+  <div style={{transform: \`scale(\${pulseScale})\`}}>
+    <AshleyHouseIcon color="#E87722" height={93} />
   </div>
-
-Available house icon files (NO text, outline only):
-- "HouseIcon_primary.png" — orange (#E87722) outlined house. Most common.
-- "HouseIcon_white.png"   — white outlined house on transparent bg
-- "HouseIcon_black.png"   — dark charcoal (#333333) outlined house on transparent bg
-
-Available wordmark files (the "ASHLEY" text as a PNG image):
-- "Ashley-Wordmark-White_PNG_u7iaxp.png"  — white wordmark. Use on DARK backgrounds.
-- "Ashley-Wordmark-Black_PNG_u7iaxp.png"  — dark wordmark. Use on LIGHT backgrounds.
-
-LEGACY: If the spec still uses a combined logo file (Ashley-Logo-Horizontal-* or Ashley-Logo-Vertical-*), render it as a single <Img> only — these already contain both icon + wordmark in one image.
+  <AshleyWordmark color="#FFFFFF" height={60} />
+</div>
+\`\`\`
 
 ## Text Color — Readability Rule
 If any text element in the spec has a very light color (e.g. #CFCFCF, #C1C1C1, #BEBEBE, #D0D0D0 or similar near-white grays) and the background is also light (e.g. #F7F7F7, #FFFFFF, #EEEEEE), that color was likely extracted from placeholder/watermark text in the reference video and will be nearly invisible. In this case, substitute a legible color: use #333333 on light backgrounds, #FFFFFF on dark backgrounds. Apply this rule to ALL text elements (address, city, tagline, disclaimer, etc.) — not just location text.
@@ -389,11 +432,11 @@ If any text element in the spec has a very light color (e.g. #CFCFCF, #C1C1C1, #
    - If the spec HAS a disclaimer element → include the prop and render it in JSX
 10. Output ONLY the .tsx file content — no explanation, no markdown fences
 11. LOGO RENDERING — READ CAREFULLY:
-   - DEFAULT (split logo): If the spec has "logo-icon" (HouseIcon_*.png) AND "logo-wordmark" (Ashley-Wordmark-*_PNG_u7iaxp.png) as siblings in a logo-group, render BOTH as <Img> elements. NEVER render the wordmark as a <p>, <span>, or any text node.
-   - LEGACY (combined logo): If the spec has a single image with Ashley-Logo-Horizontal-* or Ashley-Logo-Vertical-*, render ONE <Img> only — these already contain both icon + wordmark.
-   - NEVER render a HouseIcon ALONGSIDE a combined Ashley-Logo file — that creates a duplicate.
-   - NEVER render the Ashley logo as SVG or hand-drawn shapes. Use ONLY staticFile() + <Img>.
-   - NEVER type "ASHLEY" or "Ashley" as JSX text characters. The wordmark is always a PNG image.
+   - DEFAULT (SVG components): Import {AshleyHouseIcon, AshleyWordmark} from "../components/logo" and render as React components. AshleyHouseIcon for the house icon, AshleyWordmark for the "ASHLEY" text. Choose color props based on background brightness.
+   - NEVER use <Img> or staticFile() for any logo. All Ashley PNG logo files are deleted and will crash at runtime.
+   - NEVER render a HouseIcon ALONGSIDE an AshleyWordmark unless they are the two halves of the same logo group.
+   - NEVER type "ASHLEY" or "Ashley" as JSX text characters. Use the AshleyWordmark component.
+   - NEVER hand-draw SVG paths for the logo. Use ONLY the imported components from "../components/logo".
 12. SPEC-ONLY ELEMENTS: Only render elements that exist in the spec. Do NOT add elements from the reference example or from memory (no extra taglines, disclaimers, location blocks, or decorative text unless the spec lists them).
 13. RENDER ALL ELEMENTS: Every element in the spec MUST appear in the JSX. Do not skip any.
 14. EVERY PROP MUST BE RENDERED: If a prop is declared it MUST appear in the JSX. Never declare a prop and leave it unused.
@@ -414,7 +457,7 @@ If any text element in the spec has a very light color (e.g. #CFCFCF, #C1C1C1, #
 18. staticFile() ONLY ACCEPTS KNOWN BRAND ASSET STRING LITERALS — nothing else:
    - CORRECT: \`staticFile("HouseIcon_white.png")\`, \`staticFile("Ashley-Logo-Horizontal-OneColor-White_PNG_xyxx3x.png")\`
    - WRONG: \`staticFile(backgroundImage)\`, \`staticFile(imageFile)\`, \`staticFile("Bedroom-Background_l8g4m8.jpg")\`, \`staticFile("Sealy-Posturepedic-Logo.png")\`
-   - ONLY these filenames are valid in staticFile(): HouseIcon_white.png, HouseIcon_black.png, HouseIcon_primary.png, Ashley-Logo-Horizontal-OneColor-White_PNG_xyxx3x.png, Ashley-Logo-Horizontal-OneColor-Black_PNG_xjkrnw.png, Ashley-Logo-Horizontal-OrgHouse-WhiteType_PNG_rmwwsy.png, Ashley-Logo-Horizontal_PNG_et54ya.png, Ashley-Logo-Vertical-OneColor-White_PNG_ekcys6.png, Ashley-Logo-Vertical-OneColor-Black_PNG_u7iaxp.png, Ashley-Logo-Vertical-OrgHouse-WhiteType_PNG_wjh3mt.png, Ashley-Logo-Vertical_PNG_gztzfy.png, any bg-*.png/jpg listed under spec.background.imageFile, and any logo-*.png/jpg provided in a CUSTOM LOGO OVERRIDE instruction
+   - ONLY these filenames are valid in staticFile(): HouseIcon_white.png, HouseIcon_primary.png, Ashley-Wordmark-White_PNG_u7iaxp.png, Ashley-Wordmark-Black_PNG_u7iaxp.png, Ashley-Logo-Horizontal-OneColor-White_PNG_xyxx3x.png, Ashley-Logo-Horizontal_PNG_et54ya.png, Ashley-Logo-Vertical-OneColor-White_PNG_ekcys6.png, Ashley-Logo-Vertical-OrgHouse-WhiteType_PNG_wjh3mt.png, any bg-*.png/jpg listed under spec.background.imageFile, and any logo-*.png/jpg provided in a CUSTOM LOGO OVERRIDE instruction. NOTE: For new end cards, prefer SVG components (AshleyHouseIcon, AshleyWordmark) over staticFile() PNG logos
    - Any other filename in staticFile() will crash at runtime — DO NOT use it
    - NEVER create any prop whose value gets passed directly into staticFile()
    - If the spec shows a partner logo (Sealy, Tempur-Pedic, etc.) or background photo — render a colored div instead, do NOT use staticFile()
@@ -485,45 +528,25 @@ Update the component to incorporate the new change while preserving all previous
 
 Do NOT change any staticFile() asset filenames unless the user explicitly asks to change the logo or background.
 
-LOGO SPLITTING RULE: If the user asks to animate ONLY the house icon (e.g. "only the house icon should throb/scale/pulse"), and the component currently uses a combined Ashley logo image (Ashley-Logo-Vertical_*.png or Ashley-Logo-Horizontal_*.png), implement EXACTLY as follows — no exceptions:
+LOGO ANIMATION RULE: If the user asks to animate the house icon (e.g. "only the house icon should throb/scale/pulse"):
+- If the component uses SVG logo components (AshleyHouseIcon + AshleyWordmark), wrap ONLY the AshleyHouseIcon in a div with the animated transform. The AshleyWordmark stays static.
+- If the component uses a legacy combined PNG logo, convert it to SVG components first: replace the <Img> with AshleyHouseIcon + AshleyWordmark imports, then animate the icon.
 
-STEP 1 — Choose the correct standalone icon based on the combined logo FILENAME already in the component (NOT based on background color):
-- Filename contains "White" or "WhiteType" → use HouseIcon_white.png
-- Filename contains "Black" or "OneColor-Black" → use HouseIcon_black.png
-- Filename is Ashley-Logo-Vertical_PNG_gztzfy.png or Ashley-Logo-Horizontal_PNG_et54ya.png → use HouseIcon_primary.png
+SVG LOGO CONVERSION: If the component currently uses PNG logo images (HouseIcon_*.png, Ashley-Wordmark-*.png), convert to SVG components:
+- Replace <Img src={staticFile("HouseIcon_primary.png")} style={{height: H}} /> → <AshleyHouseIcon color="#E87722" height={H} />
+- Replace <Img src={staticFile("HouseIcon_white.png")} style={{height: H}} /> → <AshleyHouseIcon color="#FFFFFF" height={H} />
+- Replace <Img src={staticFile("HouseIcon_black.png")} style={{height: H}} /> → <AshleyHouseIcon color="#333333" height={H} />
+- Replace <Img src={staticFile("Ashley-Wordmark-White_PNG_u7iaxp.png")} style={{height: H}} /> → <AshleyWordmark color="#FFFFFF" height={H} />
+- Replace <Img src={staticFile("Ashley-Wordmark-Black_PNG_u7iaxp.png")} style={{height: H}} /> → <AshleyWordmark color="#333333" height={H} />
+- Add import: import {AshleyHouseIcon, AshleyWordmark} from "../components/logo";
+This conversion applies even if the user's feedback is about something else entirely — always prefer SVG components.
 
-STEP 2 — Use position:absolute overlay, NOT cropping. Wrap the combined logo in a position:relative container. Place the animated standalone HouseIcon as position:absolute on top of the icon portion of the combined logo. The combined logo stays FULL SIZE and UNCHANGED — it provides the ASHLEY wordmark. The animated HouseIcon visually covers the static icon in the combined logo.
-
-Example for a VERTICAL combined logo (icon at top, ASHLEY text at bottom):
-  <div style={{position: 'relative', display: 'inline-block'}}>
-    <Img src={staticFile('Ashley-Logo-Vertical-OneColor-White_PNG_ekcys6.png')} style={{width: 250, height: 'auto'}} />
-    <div style={{position: 'absolute', top: 0, left: '50%', transform: \`translateX(-50%) scale(\${throbScale})\`}}>
-      <Img src={staticFile('HouseIcon_white.png')} style={{width: 80, height: 'auto'}} />
-    </div>
-  </div>
-
-Example for a HORIZONTAL combined logo (icon on left, ASHLEY text on right):
-  <div style={{position: 'relative', display: 'inline-block'}}>
-    <Img src={staticFile('Ashley-Logo-Horizontal-OneColor-White_PNG_xyxx3x.png')} style={{height: 55, width: 'auto'}} />
-    <div style={{position: 'absolute', top: '50%', left: 0, transform: \`translateY(-50%) scale(\${throbScale})\`}}>
-      <Img src={staticFile('HouseIcon_white.png')} style={{height: 55, width: 'auto'}} />
-    </div>
-  </div>
-
-Adjust the HouseIcon size to visually match the icon portion of the specific combined logo used.
-
-ALREADY-SPLIT CORRECTION RULE: If the component already has a standalone HouseIcon (HouseIcon_*.png) but it is using the WRONG color or using objectFit/objectPosition/clipPath on any logo image, you MUST fix it:
-- Re-derive the correct HouseIcon filename from STEP 1 (use the combined logo filename still present in the component)
-- Replace any objectFit, objectPosition, clipPath, or overflow:hidden on logo images with the position:absolute overlay structure shown above
-- This correction applies even if the user's feedback is about something else entirely
-
-SPLIT WORDMARK CORRECTION: If the component uses a split logo (HouseIcon_*.png alongside ASHLEY text), and "ASHLEY" appears as typed text (<p>, <span>, <div>, or any text element), REPLACE the text element with: <Img src={staticFile("Ashley-Wordmark-White_PNG_u7iaxp.png")} style={{height: 33, width: "auto"}} /> (use Ashley-Wordmark-Black_PNG_u7iaxp.png on light backgrounds instead). This correction applies even if the user's feedback is about something else entirely.
+SPLIT WORDMARK CORRECTION: If "ASHLEY" appears as typed text (<p>, <span>, <div>, or any text element), REPLACE it with <AshleyWordmark color="#FFFFFF" height={H} /> where H matches the adjacent AshleyHouseIcon height ÷ 0.94 (use color="#333333" on light backgrounds). If no icon is present, use height={100}. This correction applies even if the user's feedback is about something else entirely.
 
 ABSOLUTELY FORBIDDEN:
-- Do NOT type "ASHLEY" or any logo text as JSX characters. No <p>, <div>, <span>, or any element with literal text "ASHLEY" or "Ashley". ALL logo text must come from image assets only.
-- Do NOT change the combined logo to a different filename.
-- Do NOT use objectFit, objectPosition, clipPath, or overflow:hidden on any logo image.
-- Do NOT choose the HouseIcon color based on background color — always derive from the logo filename per STEP 1.
+- Do NOT type "ASHLEY" or any logo text as JSX characters. No <p>, <div>, <span>, or any element with literal text "ASHLEY" or "Ashley". Use AshleyWordmark component.
+- Do NOT use objectFit, objectPosition, clipPath, or overflow:hidden on any logo element.
+- Do NOT hand-draw SVG paths for the logo — only use imported components from "../components/logo".
 
 Output ONLY the complete updated .tsx file content.`;
   } else {

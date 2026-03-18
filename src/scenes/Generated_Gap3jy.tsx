@@ -1,14 +1,13 @@
 import React from 'react';
 import {
 	AbsoluteFill,
-	Img,
 	interpolate,
 	spring,
-	staticFile,
 	useCurrentFrame,
 	useVideoConfig,
 } from 'remotion';
 import {CHESNA, useFonts} from '../loadFonts';
+import {AshleyHouseIcon, AshleyWordmark} from '../components/logo';
 
 export type Gap3jyProps = {
 	tagline: string;
@@ -48,7 +47,7 @@ export const Gap3jy: React.FC<Gap3jyProps> = ({
 	const logoThrob = interpolate(throbProgress, [0, 0.5, 1], [1.0, 1.45, 1.0]);
 
 	return (
-		<AbsoluteFill style={{backgroundColor: '#432d1f'}}>
+		<AbsoluteFill style={{backgroundColor: 'transparent'}}>
 			{/* Top Section: Logo + Tagline */}
 			<div
 				style={{
@@ -74,15 +73,9 @@ export const Gap3jy: React.FC<Gap3jyProps> = ({
 					}}
 				>
 					<div style={{transform: `scale(${logoThrob})`}}>
-						<Img
-							src={staticFile('HouseIcon_white.png')}
-							style={{height: 108, width: 'auto'}}
-						/>
+						<AshleyHouseIcon color="#FFFFFF" height={108} />
 					</div>
-					<Img
-						src={staticFile('Ashley-Wordmark-White_PNG_u7iaxp.png')}
-						style={{height: 100, width: 'auto'}}
-					/>
+					<AshleyWordmark color="#FFFFFF" height={100} />
 				</div>
 
 				{/* Tagline */}

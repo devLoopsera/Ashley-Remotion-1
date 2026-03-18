@@ -83,18 +83,18 @@ Do NOT describe any animations. Leave the animations array empty.
 - ONLY include image elements for Ashley BRAND LOGO assets from the list below
 - NEVER add image elements for: product photos, room scenes, partner logos (Sealy, Tempur-Pedic, etc.), or any non-Ashley-brand imagery — these files do not exist and will cause a crash
 
-## LOGO — DEFAULT: Split house icon + ASHLEY wordmark image
-ALWAYS render the Ashley logo as TWO separate IMAGE elements inside a logo-group.
-NEVER add a text element with content "ASHLEY" — the wordmark must come from a PNG file, not typed text.
+## LOGO — DEFAULT: SVG component house icon + ASHLEY wordmark
+ALWAYS render the Ashley logo as TWO separate elements inside a logo-group.
+NEVER add a text element with content "ASHLEY" — the wordmark is an SVG component, not typed text.
 
-1. House icon IMAGE element — choose based on what you see:
-   - "HouseIcon_primary.png" — orange (#E87722) outlined house. DEFAULT — use unless clearly otherwise.
-   - "HouseIcon_white.png"   — white outlined house. Use only if the house is definitively all white.
-   - "HouseIcon_black.png"   — dark charcoal (#333333) outlined house. Use only if definitively dark/black.
+1. House icon element — type "svg-component", component "AshleyHouseIcon":
+   - color "#E87722" — orange outlined house. DEFAULT — use unless clearly otherwise.
+   - color "#FFFFFF" — white outlined house. Use only if the house is definitively all white.
+   - color "#333333" — dark charcoal outlined house. Use only if definitively dark/black.
 
-2. ASHLEY wordmark IMAGE element — choose based on background brightness:
-   - "Ashley-Wordmark-White_PNG_u7iaxp.png"  — white wordmark. Use on DARK backgrounds.
-   - "Ashley-Wordmark-Black_PNG_u7iaxp.png"  — dark wordmark. Use on LIGHT backgrounds.
+2. ASHLEY wordmark element — type "svg-component", component "AshleyWordmark":
+   - color "#FFFFFF" — white wordmark. Use on DARK backgrounds.
+   - color "#333333" — dark wordmark. Use on LIGHT backgrounds.
 
 Layout direction — match what you see:
 - House icon LEFT of wordmark → layout direction "row"
@@ -130,15 +130,15 @@ The schema below is a TEMPLATE showing possible elements — only include the on
       "children": [
         {
           "id": "logo-icon",
-          "type": "image",
-          "asset": "HouseIcon_primary.png",
-          "size": { "height": <measure the house icon pixel height> }
+          "type": "svg-component",
+          "component": "AshleyHouseIcon",
+          "props": { "color": "#E87722", "height": "<measure the house icon pixel height>" }
         },
         {
           "id": "logo-wordmark",
-          "type": "image",
-          "asset": "Ashley-Wordmark-White_PNG_u7iaxp.png",
-          "size": { "height": <measure the ASHLEY wordmark pixel height> }
+          "type": "svg-component",
+          "component": "AshleyWordmark",
+          "props": { "color": "#FFFFFF", "height": "<measure the ASHLEY wordmark pixel height>" }
         }
       ],
       "layout": { "direction": "<row if icon left of wordmark, column if icon above wordmark>", "gap": <measured gap between icon and wordmark>, "alignItems": "center" }
@@ -216,7 +216,8 @@ The schema below is a TEMPLATE showing possible elements — only include the on
   "animations": [],
   "textContent": {
     "tagline": "<exact tagline text, or null if no tagline>",
-    "disclaimer": "<full disclaimer text verbatim, or null if not visible>"
+    "disclaimer": "<full disclaimer text verbatim, or null if not visible>",
+    "locations": []
   },
   "notes": "<any observations that don't fit the schema above>"
 }
@@ -245,6 +246,13 @@ ${elementIds.map((id) => `  - "${id}"`).join("\n")}
 
 ## IMPORTANT: Look carefully for the house icon scale-throb
 Ashley end screens very commonly have the house icon ("logo-icon") scale up larger then shrink back to normal size right after it appears — this is called a "scale-throb" or "pulse". This happens QUICKLY, typically within 0.5–1.5 seconds of the logo first appearing. Compare consecutive frames closely: look for 2–5 frames where the house icon is noticeably LARGER than in the final resting state (even a 10–15% size increase counts), then returns to its resting size. Do NOT dismiss this as "fade-in" — if the icon gets bigger then smaller, that is a scale-throb. If you see this pattern, you MUST report it as postEffect: "scale-throb" on the logo-icon target.
+
+## IMPORTANT: Look for logo stroke-draw / reveal animation
+Some Ashley end screens show the house icon being drawn as a stroke outline (lines appear progressively, tracing the roof and walls), and the "ASHLEY" letters flying in from dispersed positions outward before settling. This is a "logo-reveal" animation — completely different from a fade-in or throb. Signs to look for:
+- The house appears as an outline being drawn, not a filled icon fading in
+- Letters appear to come from outside their resting positions, converging inward
+- The animation takes 2–4 seconds and covers most of the screen
+If you see this pattern on the logo or logo-group element, report it as type: "logo-reveal" (not "fade-in") and set postEffect: null.
 
 ---
 
@@ -275,6 +283,7 @@ After the </description> tag, return a JSON array. For each element (or group of
 - "slide-in-left" — element moves from LEFT to RIGHT into its final position while fading in. Look for horizontal position shifting between frames.
 - "slide-in-right" — element moves from RIGHT to LEFT into its final position while fading in. Look for horizontal position shifting between frames.
 - "scale-in" — element grows from small/invisible to full size.
+- "logo-reveal" — full choreographed logo draw animation (house stroke draw + letter disperse). ONLY for the logo or logo-group element. When this type is used, the code generator will replace the logo with AshleyLogoReveal component.
 
 ### How to distinguish fade-in from slide animations
 Compare the element's position across consecutive frames where it first appears:
@@ -817,42 +826,54 @@ function enforceLogoSplit(spec) {
   const brightness = hexBrightness(bgColor);
   const isDark = brightness <= 0.50;
 
-  // Walk spec.elements — find any combined logo assets and split them into icon + text
+  // Walk spec.elements — find any combined logo assets and split them into SVG component refs
   function processElements(elements) {
     for (let i = 0; i < (elements || []).length; i++) {
       const el = elements[i];
       if (el.children) processElements(el.children);
 
-      // If this is a combined logo image (Ashley-Logo-Horizontal-* or Ashley-Logo-Vertical-*), split it
+      // If this is a combined logo image (Ashley-Logo-Horizontal-* or Ashley-Logo-Vertical-*), replace with preset SVG component
       if (el.type === "image" && el.asset && /Ashley-Logo-(Horizontal|Vertical)/.test(el.asset)) {
-        const iconHeight = el.size?.height || 60;
-        const wordmarkAsset = isDark ? "Ashley-Wordmark-White_PNG_u7iaxp.png" : "Ashley-Wordmark-Black_PNG_u7iaxp.png";
-        console.log(`   \u2713 Split combined logo "${el.asset}" \u2192 HouseIcon_primary.png + ${wordmarkAsset}`);
+        const isVertical = /Vertical/.test(el.asset);
+        const wordmarkHeight = el.size?.height || 60;
+        const wordmarkColor = isDark ? "#FFFFFF" : "#333333";
+        const preset = isVertical ? "AshleyVerticalLogo" : "AshleyHorizontalLogo";
+        console.log(`   \u2713 Replaced combined logo "${el.asset}" \u2192 ${preset} SVG preset`);
 
-        // Replace the combined image with the house icon
-        el.id = "logo-icon";
-        el.asset = "HouseIcon_primary.png";
-        el.size = {height: Math.round(iconHeight * 0.65)};
-
-        // Insert ASHLEY wordmark image sibling after this element
-        const wordmarkEl = {
-          id: "logo-wordmark",
-          type: "image",
-          asset: wordmarkAsset,
-          size: {height: Math.round(iconHeight * 0.55)}
-        };
-        elements.splice(i + 1, 0, wordmarkEl);
-        i++; // skip the inserted element
+        el.id = isVertical ? "logo-vertical" : "logo-horizontal";
+        el.type = "svg-component";
+        el.component = preset;
+        el.props = {height: wordmarkHeight, iconColor: "#E87722", wordmarkColor};
+        delete el.asset;
+        el.size = {height: wordmarkHeight};
       }
 
-      // Convert any ASHLEY text elements → wordmark image (Gemini sometimes ignores the prompt)
+      // If this is a PNG house icon or wordmark image, convert to SVG component ref
+      if (el.type === "image" && el.asset && /^HouseIcon_/.test(el.asset)) {
+        const iconColor = /white/i.test(el.asset) ? "#FFFFFF" : /black/i.test(el.asset) ? "#333333" : "#E87722";
+        console.log(`   \u2713 Converted PNG "${el.asset}" \u2192 AshleyHouseIcon SVG component`);
+        el.type = "svg-component";
+        el.component = "AshleyHouseIcon";
+        el.props = {color: iconColor, height: el.size?.height || 60};
+        delete el.asset;
+      }
+      if (el.type === "image" && el.asset && /^Ashley-Wordmark-/.test(el.asset)) {
+        const wordmarkColor = /White/i.test(el.asset) ? "#FFFFFF" : "#333333";
+        console.log(`   \u2713 Converted PNG "${el.asset}" \u2192 AshleyWordmark SVG component`);
+        el.type = "svg-component";
+        el.component = "AshleyWordmark";
+        el.props = {color: wordmarkColor, height: el.size?.height || 33};
+        delete el.asset;
+      }
+
+      // Convert any ASHLEY text elements → SVG wordmark component (Gemini sometimes ignores the prompt)
       if (el.type === "text" && /^ashley$/i.test((el.content || "").trim())) {
-        const wordmarkAsset = isDark ? "Ashley-Wordmark-White_PNG_u7iaxp.png" : "Ashley-Wordmark-Black_PNG_u7iaxp.png";
-        console.log(`   \u2713 Converted ASHLEY text element "${el.id}" \u2192 ${wordmarkAsset}`);
+        const wordmarkColor = isDark ? "#FFFFFF" : "#333333";
+        console.log(`   \u2713 Converted ASHLEY text element "${el.id}" \u2192 AshleyWordmark SVG component`);
         el.id = el.id || "logo-wordmark";
-        el.type = "image";
-        el.asset = wordmarkAsset;
-        el.size = el.size?.height ? el.size : {height: 33};
+        el.type = "svg-component";
+        el.component = "AshleyWordmark";
+        el.props = {color: wordmarkColor, height: 33};
         delete el.content;
         delete el.style;
         delete el.fontFamily;
@@ -861,6 +882,7 @@ function enforceLogoSplit(spec) {
         delete el.letterSpacing;
         delete el.isTextProp;
         delete el.propName;
+        delete el.asset;
       }
     }
   }
@@ -888,18 +910,13 @@ function enforceLogoSplit(spec) {
 // static assets — omit them so the generator doesn't reference missing files.
 const KNOWN_BRAND_ASSETS = new Set([
   "HouseIcon_white.png",
-  "HouseIcon_black.png",
   "HouseIcon_primary.png",
   "Ashley-Wordmark-White_PNG_u7iaxp.png",
   "Ashley-Wordmark-Black_PNG_u7iaxp.png",
   "Ashley-Logo-Horizontal-OneColor-White_PNG_xyxx3x.png",
-  "Ashley-Logo-Horizontal-OneColor-Black_PNG_xjkrnw.png",
-  "Ashley-Logo-Horizontal-OrgHouse-WhiteType_PNG_rmwwsy.png",
   "Ashley-Logo-Horizontal_PNG_et54ya.png",
   "Ashley-Logo-Vertical-OneColor-White_PNG_ekcys6.png",
-  "Ashley-Logo-Vertical-OneColor-Black_PNG_u7iaxp.png",
   "Ashley-Logo-Vertical-OrgHouse-WhiteType_PNG_wjh3mt.png",
-  "Ashley-Logo-Vertical_PNG_gztzfy.png",
 ]);
 
 function stripUnknownImageElements(spec) {
@@ -980,7 +997,7 @@ function extractLastFrame(videoPath, timeSec = null) {
 
   const seekArgs = timeSec != null
     ? ["-ss", String(timeSec), "-i", path.resolve(videoPath)]
-    : ["-sseof", "-2", "-i", path.resolve(videoPath)];
+    : ["-sseof", "-0.5", "-i", path.resolve(videoPath)];
 
   const result = spawnSync(
     FFMPEG_BIN,
@@ -1122,14 +1139,12 @@ Return ONLY valid JSON with this structure (no markdown, no explanation):
   "notes": "<observations>"
 }
 
-## LOGO — DEFAULT: Split house icon + ASHLEY wordmark image
-Render the logo as TWO IMAGE elements in a logo-group.
-NEVER add a text element with content "ASHLEY" — the wordmark must come from a PNG file, not typed text.
+## LOGO — DEFAULT: SVG component house icon + ASHLEY wordmark
+Render the logo as TWO svg-component elements in a logo-group.
+NEVER add a text element with content "ASHLEY" — the wordmark is an SVG component, not typed text.
 
-1. House icon image: "HouseIcon_primary.png" (orange, DEFAULT) or "HouseIcon_white.png" / "HouseIcon_black.png" if clearly visible as that color
-2. ASHLEY wordmark image — choose based on background brightness:
-   - "Ashley-Wordmark-White_PNG_u7iaxp.png"  — white wordmark. Use on DARK backgrounds.
-   - "Ashley-Wordmark-Black_PNG_u7iaxp.png"  — dark wordmark. Use on LIGHT backgrounds.
+1. House icon: type "svg-component", component "AshleyHouseIcon", props: { color: "#E87722" } (DEFAULT) or "#FFFFFF" / "#333333" if clearly that color
+2. ASHLEY wordmark: type "svg-component", component "AshleyWordmark", props: { color: "#FFFFFF" } on DARK backgrounds, { color: "#333333" } on LIGHT backgrounds
 
 Layout: "row" if icon is left of wordmark, "column" if icon is above wordmark.
 Font: "Chesna Grotesk" (weights 400 and 600)

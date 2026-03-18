@@ -4,13 +4,10 @@ import {
   interpolate,
   spring,
   Easing,
-  Img,
-  staticFile,
 } from "remotion";
 import {COLORS, FPS} from "../constants";
 import {bodyFont} from "../fonts";
-
-const ASHLEY_LOGO = "Ashley-Logo-Horizontal_PNG_et54ya.png";
+import {AshleyHouseIcon, AshleyWordmark} from "../components/logo";
 
 export const Scene4CTA: React.FC = () => {
   const frame = useCurrentFrame();
@@ -106,14 +103,10 @@ export const Scene4CTA: React.FC = () => {
             alignItems: "center",
           }}
         >
-          <Img
-            src={staticFile(ASHLEY_LOGO)}
-            style={{
-              width: 420,
-              height: "auto",
-              objectFit: "contain",
-            }}
-          />
+          <div style={{display: "flex", flexDirection: "row", alignItems: "center", gap: 20}}>
+            <AshleyHouseIcon color="#E87722" height={100} />
+            <AshleyWordmark color="#333333" height={85} />
+          </div>
 
           {/* Taupe divider line */}
           <div

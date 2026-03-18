@@ -18,17 +18,25 @@
       "children": [
         {
           "id": "logo-icon",
-          "type": "image",
-          "asset": "HouseIcon_white.png",
+          "type": "svg-component",
           "size": {
+            "height": 108
+          },
+          "component": "AshleyHouseIcon",
+          "props": {
+            "color": "#FFFFFF",
             "height": 108
           }
         },
         {
           "id": "logo-wordmark",
-          "type": "image",
-          "asset": "Ashley-Wordmark-White_PNG_u7iaxp.png",
+          "type": "svg-component",
           "size": {
+            "height": 100
+          },
+          "component": "AshleyWordmark",
+          "props": {
+            "color": "#FFFFFF",
             "height": 100
           }
         }

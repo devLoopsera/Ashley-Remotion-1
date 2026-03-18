@@ -2,15 +2,11 @@ import React from "react";
 import {
   useCurrentFrame,
   AbsoluteFill,
-  staticFile,
   interpolate,
   Easing,
-  Img,
 } from "remotion";
 import {CHESNA, useFonts} from "../loadFonts";
-
-const ASHLEY_ICON = "HouseIcon_white.png";
-const ASHLEY_TEXT = "Ashley-Logo-Horizontal-OneColor-White_PNG_xyxx3x.png";
+import {AshleyHouseIcon, AshleyWordmark} from "../components/logo";
 
 export const EndCard24682: React.FC = () => {
   const frame = useCurrentFrame();
@@ -59,17 +55,11 @@ export const EndCard24682: React.FC = () => {
 
           {/* House icon — only this throbs */}
           <div style={{transform: `scale(${logoThrob})`}}>
-            <Img
-              src={staticFile(ASHLEY_ICON)}
-              style={{height: 120, width: "auto", display: "block"}}
-            />
+            <AshleyHouseIcon color="#FFFFFF" height={120} />
           </div>
 
-          {/* Full ASHLEY wordmark — no clipping, full image */}
-          <Img
-            src={staticFile(ASHLEY_TEXT)}
-            style={{height: 120, width: "auto", display: "block"}}
-          />
+          {/* Full ASHLEY wordmark */}
+          <AshleyWordmark color="#FFFFFF" height={120} />
         </div>
 
         {/* Tagline */}

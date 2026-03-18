@@ -3,12 +3,11 @@ import {
 	useCurrentFrame,
 	useVideoConfig,
 	AbsoluteFill,
-	staticFile,
 	spring,
 	interpolate,
-	Img,
 } from 'remotion';
 import {CHESNA, useFonts} from '../loadFonts';
+import {AshleyHouseIcon, AshleyWordmark} from '../components/logo';
 
 export type Q2AGRNATPRTempurBreezeEVGTVYTMattress30sENG1080x1080Nzlmn9Props = {
 	tagline: string;
@@ -69,16 +68,14 @@ export const Q2AGRNATPRTempurBreezeEVGTVYTMattress30sENG1080x1080Nzlmn9: React.F
 					style={{
 						opacity: logoFade,
 						transform: `scale(${throbScale})`,
+						display: 'flex',
+						flexDirection: 'row',
+						alignItems: 'center',
+						gap: 20,
 					}}
 				>
-					{/* 
-						NOTE: Per spec, both logo-icon and logo-wordmark were provided.
-						The anti-duplication rule requires rendering ONLY the combined logo file.
-					*/}
-					<Img
-						src={staticFile('Ashley-Logo-Horizontal_PNG_et54ya.png')}
-						style={{height: 150, width: 'auto'}}
-					/>
+					<AshleyHouseIcon color="#E87722" height={120} />
+					<AshleyWordmark color="#282828" height={100} />
 				</div>
 
 				{/* Tagline */}

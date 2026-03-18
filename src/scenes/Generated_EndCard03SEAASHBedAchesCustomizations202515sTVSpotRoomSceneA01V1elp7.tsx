@@ -1,14 +1,13 @@
 import React from 'react';
 import {
 	AbsoluteFill,
-	Img,
 	interpolate,
 	spring,
-	staticFile,
 	useCurrentFrame,
 	useVideoConfig,
 } from 'remotion';
 import {CHESNA, useFonts} from '../loadFonts';
+import {AshleyHouseIcon, AshleyWordmark} from '../components/logo';
 
 export type EndCard03SEAASHBedAchesCustomizations202515sTVSpotRoomSceneA01V1elp7Props =
 	{
@@ -80,14 +79,8 @@ export const EndCard03SEAASHBedAchesCustomizations202515sTVSpotRoomSceneA01V1elp
 							transform: `scale(${logoThrobScale})`,
 						}}
 					>
-						<Img
-							src={staticFile('HouseIcon_primary.png')}
-							style={{height: 104, width: 'auto'}}
-						/>
-						<Img
-							src={staticFile('Ashley-Wordmark-Black_PNG_u7iaxp.png')}
-							style={{height: 125, width: 'auto'}}
-						/>
+						<AshleyHouseIcon color="#E87722" height={104} />
+						<AshleyWordmark color="#333333" height={125} />
 					</div>
 
 					{/* Tagline */}

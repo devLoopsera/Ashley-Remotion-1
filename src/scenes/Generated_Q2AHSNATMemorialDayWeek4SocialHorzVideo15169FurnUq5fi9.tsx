@@ -3,11 +3,10 @@ import {
   useCurrentFrame,
   useVideoConfig,
   AbsoluteFill,
-  staticFile,
   spring,
-  Img,
 } from 'remotion';
 import {CHESNA, useFonts} from '../loadFonts';
+import {AshleyHouseIcon, AshleyWordmark} from '../components/logo';
 
 export type Q2AHSNATMemorialDayWeek4SocialHorzVideo15169FurnUq5fi9Props = {
   disclaimer: string;
@@ -42,10 +41,10 @@ export const Q2AHSNATMemorialDayWeek4SocialHorzVideo15169FurnUq5fi9: React.FC<Q2
           alignItems: 'center',
         }}
       >
-        <Img
-          src={staticFile('Ashley-Logo-Horizontal_PNG_et54ya.png')}
-          style={{height: 110, width: 'auto'}}
-        />
+        <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10}}>
+          <AshleyHouseIcon color="#E87722" height={90} />
+          <AshleyWordmark color="#333333" height={80} />
+        </div>
         <p
           style={{
             fontFamily: CHESNA,

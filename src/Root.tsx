@@ -15,6 +15,7 @@ import {Q2AGRNATPRTempurBreezeEVGTVYTMattress30sENG1080x1080Nzlmn9} from "./scen
 import {Gap3jy} from "./scenes/Generated_Gap3jy";
 import {Dedluo} from "./scenes/Generated_Dedluo";
 import {AHSEndCardWipeTransitionVERTSPAN} from "./scenes/Generated_AHSEndCardWipeTransitionVERTSPAN";
+import {LogoValidation} from "./LogoValidation";
 
 const DEFAULT_DISCLAIMER =
   "Ashley stores are independently owned and operated. ©2024 Rogers Furniture, DBA Ashley. All rights reserved. Furniture since 1945.";
@@ -88,18 +89,13 @@ export const RemotionRoot: React.FC = () => {
         width={1920}
         height={1080}
         defaultProps={{
-          tagline: "SHOP MORE DEALS IN STORE",
           locations: [
             {
-              "city": "MARQUETTE",
-              "address": "2152 US Hwy 41 W"
-            },
-            {
-              "city": "ESCANABA",
-              "address": "2222 North Lincoln Road"
+              "address": "Street Address",
+              "city": "City, State Zip",
+              "phone": "(000) 000-0000"
             }
           ],
-          disclaimer: "Ashley stores are independently owned and operated. ©2026 Rogers Furniture, DBA Ashley. All rights reserved.\nExpiration date 3/30/2026",
         }}
       />
       <Composition
@@ -196,18 +192,13 @@ export const RemotionRoot: React.FC = () => {
         width={1920}
         height={1080}
         defaultProps={{
-          tagline: "SHOP MORE DEALS IN STORE",
           locations: [
             {
-              "city": "MARQUETTE",
-              "address": "2152 US Hwy 41 W"
-            },
-            {
-              "city": "ESCANABA",
-              "address": "2222 North Lincoln Road"
+              "address": "Street Address",
+              "city": "City, State Zip",
+              "phone": "(000) 000-0000"
             }
           ],
-          disclaimer: "Ashley stores are independently owned and operated. ©2026 Roger's Furniture, DBA Ashley. All rights reserved.\nExpiration date 3/30/2026",
         }}
       />
       <Composition
@@ -220,6 +211,14 @@ export const RemotionRoot: React.FC = () => {
         defaultProps={{
           disclaimer: "© 2024 Ashley Global Retail, LLC. Todos los derechos reservados.",
         }}
+      />
+      <Composition
+        id="LogoValidation"
+        component={LogoValidation}
+        durationInFrames={150}
+        fps={30}
+        width={1920}
+        height={1080}
       />
     </>
   );

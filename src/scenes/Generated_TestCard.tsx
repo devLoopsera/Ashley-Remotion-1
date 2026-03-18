@@ -2,15 +2,11 @@ import React from "react";
 import {
   useCurrentFrame,
   AbsoluteFill,
-  staticFile,
   interpolate,
   Easing,
-  Img,
 } from "remotion";
 import {CHESNA, useFonts} from "../loadFonts";
-
-const ASHLEY_ICON = "HouseIcon_white.png";
-const ASHLEY_WORDMARK = "Ashley-Logo-Horizontal-OneColor-White_PNG_xyxx3x.png";
+import {AshleyHouseIcon, AshleyWordmark} from "../components/logo";
 
 export type TestCardProps = {
   tagline: string;
@@ -78,17 +74,11 @@ export const TestCard: React.FC<TestCardProps> = ({
         >
           {/* House icon — only this throbs */}
           <div style={{transform: `scale(${logoThrob})`}}>
-            <Img
-              src={staticFile(ASHLEY_ICON)}
-              style={{height: 120, width: "auto", display: "block"}}
-            />
+            <AshleyHouseIcon color="#FFFFFF" height={120} />
           </div>
 
           {/* Full ASHLEY wordmark */}
-          <Img
-            src={staticFile(ASHLEY_WORDMARK)}
-            style={{height: 120, width: "auto", display: "block"}}
-          />
+          <AshleyWordmark color="#FFFFFF" height={120} />
         </div>
 
         {/* Tagline */}

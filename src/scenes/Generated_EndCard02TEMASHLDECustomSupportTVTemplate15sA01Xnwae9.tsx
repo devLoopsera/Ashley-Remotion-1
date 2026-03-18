@@ -1,14 +1,13 @@
 import React from 'react';
 import {
   AbsoluteFill,
-  Img,
   interpolate,
   spring,
-  staticFile,
   useCurrentFrame,
   useVideoConfig,
 } from 'remotion';
 import {CHESNA, useFonts} from '../loadFonts';
+import {AshleyHouseIcon, AshleyWordmark} from '../components/logo';
 
 export type EndCard02TEMASHLDECustomSupportTVTemplate15sA01Xnwae9Props = {
   tagline: string;
@@ -47,17 +46,10 @@ export const EndCard02TEMASHLDECustomSupportTVTemplate15sA01Xnwae9: React.FC<
           ...animatedStyle,
         }}
       >
-        {/* Logo Group */}
-        <div>
-          <Img
-            src={staticFile(
-              'Ashley-Logo-Vertical-OrgHouse-WhiteType_PNG_wjh3mt.png'
-            )}
-            style={{
-              height: 280,
-              width: 'auto',
-            }}
-          />
+        {/* Logo Group — stacked */}
+        <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20}}>
+          <AshleyHouseIcon color="#E87722" height={160} />
+          <AshleyWordmark color="#FFFFFF" height={100} />
         </div>
 
         {/* Tagline */}

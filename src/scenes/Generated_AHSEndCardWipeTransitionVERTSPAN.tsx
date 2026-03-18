@@ -1,13 +1,12 @@
 import React from 'react';
 import {
 	AbsoluteFill,
-	Img,
 	spring,
-	staticFile,
 	useCurrentFrame,
 	useVideoConfig,
 } from 'remotion';
 import {CHESNA, useFonts} from '../loadFonts';
+import {AshleyHouseIcon, AshleyWordmark} from '../components/logo';
 
 export type AHSEndCardWipeTransitionVERTSPANProps = {
 	disclaimer: string;
@@ -52,14 +51,8 @@ export const AHSEndCardWipeTransitionVERTSPAN: React.FC<
 						gap: 30,
 					}}
 				>
-					<Img
-						src={staticFile('HouseIcon_primary.png')}
-						style={{height: 160, width: 'auto'}}
-					/>
-					<Img
-						src={staticFile('Ashley-Wordmark-Black_PNG_u7iaxp.png')}
-						style={{height: 120, width: 'auto'}}
-					/>
+					<AshleyHouseIcon color="#E87722" height={160} />
+					<AshleyWordmark color="#333333" height={120} />
 				</div>
 			</div>
 

@@ -453,7 +453,7 @@ app.post("/api/regenerate", async (req, res) => {
           : {feedback: qaResult.feedback, existingCode, customLogoFile, customFontFamily, customFontFiles}
       );
       const {code: sanitizedCode, changed: logoFixed} = fixHandTypedLogo(rawCode);
-      if (logoFixed) send({type: "log", text: "   \u2713 Auto-fixed ASHLEY text \u2192 wordmark image"});
+      if (logoFixed) send({type: "log", text: "   \u2713 Auto-fixed logo \u2192 SVG components"});
       fs.writeFileSync(outputFile, sanitizedCode);
       if (attempt === 1) send({type: "log", text: "✓ Component regenerated"});
 
@@ -520,7 +520,7 @@ app.post("/api/feedback", async (req, res) => {
     const pastFeedback = Array.isArray(history) ? history.filter(h => typeof h === "string") : [];
     const rawCode = await generateComponent(null, componentName, {feedback: feedback.trim(), existingCode, history: pastFeedback});
     const {code: fixedCode, changed: logoFixed} = fixHandTypedLogo(rawCode);
-    if (logoFixed) console.log("   \u2713 Auto-fixed ASHLEY text \u2192 wordmark image");
+    if (logoFixed) console.log("   \u2713 Auto-fixed logo \u2192 SVG components");
     const changed = fixedCode !== existingCode;
     if (changed) {
       console.log(`✓ Code updated (${fixedCode.length - existingCode.length >= 0 ? "+" : ""}${fixedCode.length - existingCode.length} chars)`);

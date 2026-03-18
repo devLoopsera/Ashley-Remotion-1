@@ -1817,7 +1817,8 @@
 
     function suggestName(filename) {
       let base = filename.replace(/\.[^.]+$/, '').replace(/^\d+_?/, '');
-      const words = base.split(/[-_\s]+/).filter(Boolean);
+      // Split on any non-alphanumeric character (handles dots, parens, spaces, etc.)
+      const words = base.split(/[^A-Za-z0-9]+/).filter(Boolean);
       if (!words.length) return 'EndCard';
       const pascal = words.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('');
       return /^[A-Z]/.test(pascal) ? pascal : 'EndCard' + pascal;

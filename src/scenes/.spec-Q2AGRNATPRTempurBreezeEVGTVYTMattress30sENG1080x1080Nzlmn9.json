@@ -18,25 +18,37 @@
       "children": [
         {
           "id": "logo-icon",
-          "type": "image",
-          "asset": "HouseIcon_primary.png",
+          "type": "svg-component",
           "size": {
+            "height": 150
+          },
+          "component": "AshleyHouseIcon",
+          "props": {
+            "color": "#E87722",
             "height": 150
           }
         },
         {
           "id": "logo-icon",
-          "type": "image",
-          "asset": "HouseIcon_primary.png",
+          "type": "svg-component",
           "size": {
+            "height": 98
+          },
+          "component": "AshleyHouseIcon",
+          "props": {
+            "color": "#E87722",
             "height": 98
           }
         },
         {
           "id": "logo-wordmark",
-          "type": "image",
-          "asset": "Ashley-Wordmark-Black_PNG_u7iaxp.png",
+          "type": "svg-component",
           "size": {
+            "height": 83
+          },
+          "component": "AshleyWordmark",
+          "props": {
+            "color": "#333333",
             "height": 83
           }
         }
