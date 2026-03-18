@@ -174,18 +174,18 @@ export const RemotionRoot: React.FC = () => {
         width={1920}
         height={1080}
         defaultProps={{
-          tagline: "SHOP MORE DEALS IN STORE AND ONLINE",
+          tagline: "SHOP MORE DEALS IN STORE",
           locations: [
             {
-              "city": "Del Rio",
-              "address": "504 E 10th St.\nDel Rio, TX 78840"
+              "city": "MARQUETTE",
+              "address": "2152 US Hwy 41 W"
             },
             {
-              "city": "Eagle Pass",
-              "address": "101 Aztec Dr.\nEagle Pass, TX 78852"
+              "city": "ESCANABA",
+              "address": "2222 North Lincoln Road"
             }
           ],
-          disclaimer: "Ashley stores are independently owned and operated. ©2026 PLR FURNITURE, INC., DBA Ashley. All rights reserved.\nExpiration date 3/31/2026",
+          disclaimer: "Ashley stores are independently owned and operated. ©2026 Roger's Furniture, DBA Ashley. All rights reserved. Expiration date 3/30/2026",
         }}
       />
       <Composition
@@ -196,18 +196,18 @@ export const RemotionRoot: React.FC = () => {
         width={1920}
         height={1080}
         defaultProps={{
-          tagline: "SHOP MORE DEALS IN STORE AND ONLINE",
+          tagline: "SHOP MORE DEALS IN STORE",
           locations: [
             {
-              "city": "Del Rio",
-              "address": "504 E 10th St.\nDel Rio, TX 78840"
+              "city": "MARQUETTE",
+              "address": "2152 US Hwy 41 W"
             },
             {
-              "city": "Eagle Pass",
-              "address": "101 Aztec Dr.\nEagle Pass, TX 78852"
+              "city": "ESCANABA",
+              "address": "2222 North Lincoln Road"
             }
           ],
-          disclaimer: "Ashley stores are independently owned and operated. ©2026 PLR FURNITURE, INC., DBA Ashley. All rights reserved.\nExpiration date 3/31/2026",
+          disclaimer: "Ashley stores are independently owned and operated. ©2026 Roger's Furniture, DBA Ashley. All rights reserved.\nExpiration date 3/30/2026",
         }}
       />
       <Composition

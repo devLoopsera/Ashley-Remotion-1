@@ -48,7 +48,7 @@ export const Gap3jy: React.FC<Gap3jyProps> = ({
 	const logoThrob = interpolate(throbProgress, [0, 0.5, 1], [1.0, 1.45, 1.0]);
 
 	return (
-		<AbsoluteFill style={{backgroundColor: '#432d1f'}}>
+		<AbsoluteFill style={{backgroundColor: '#432D1F'}}>
 			{/* Top Section: Logo + Tagline */}
 			<div
 				style={{

@@ -509,4 +509,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = {templatize, listAssets, applyOverrides, findFontFiles};
+module.exports = {templatize, listAssets, applyOverrides, findFontFiles, registerInRoot};

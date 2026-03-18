@@ -1,18 +1,18 @@
 {
-  "durationFrames": 168,
+  "durationFrames": 70,
   "fps": 30,
   "width": 1920,
   "height": 1080,
   "background": {
     "type": "solid",
-    "color": "#4A2F1F"
+    "color": "#40291C"
   },
   "elements": [
     {
       "id": "logo-group",
       "type": "group",
       "position": {
-        "topPercent": 32,
+        "topPercent": 30.5,
         "centerHorizontal": true
       },
       "children": [
@@ -21,7 +21,7 @@
           "type": "image",
           "asset": "HouseIcon_white.png",
           "size": {
-            "height": 90
+            "height": 86
           }
         },
         {
@@ -35,14 +35,14 @@
       ],
       "layout": {
         "direction": "row",
-        "gap": 25,
+        "gap": 22,
         "alignItems": "center"
       }
     },
     {
       "id": "tagline",
       "type": "text",
-      "content": "SHOP MORE DEALS IN STORE AND ONLINE",
+      "content": "SHOP MORE DEALS IN STORE",
       "isTextProp": true,
       "propName": "tagline",
       "style": {
@@ -55,8 +55,7 @@
       },
       "position": {
         "belowElement": "logo-group",
-        "marginTop": 20,
-        "centerHorizontal": true
+        "marginTop": 45
       }
     },
     {
@@ -65,16 +64,21 @@
       "isArrayProp": true,
       "propName": "locations",
       "position": {
-        "belowElement": "tagline",
-        "marginTop": 90,
+        "bottomPx": 292,
         "centerHorizontal": true
       },
       "layout": {
         "direction": "row",
-        "gap": 250,
+        "gap": 160,
         "alignItems": "flex-start"
       },
       "itemTemplate": {
+        "type": "group",
+        "layout": {
+          "direction": "column",
+          "gap": 26,
+          "alignItems": "flex-start"
+        },
         "children": [
           {
             "id": "city",
@@ -82,11 +86,11 @@
             "propPath": "city",
             "style": {
               "fontFamily": "Chesna Grotesk",
-              "fontSize": 48,
+              "fontSize": 46,
               "fontWeight": 600,
               "color": "#FFFFFF",
-              "letterSpacing": 0,
-              "textTransform": "none"
+              "letterSpacing": 2,
+              "textTransform": "uppercase"
             }
           },
           {
@@ -95,11 +99,10 @@
             "propPath": "address",
             "style": {
               "fontFamily": "Chesna Grotesk",
-              "fontSize": 42,
+              "fontSize": 36,
               "fontWeight": 400,
               "color": "#FFFFFF",
-              "letterSpacing": 0,
-              "lineHeight": 1.2
+              "letterSpacing": 0.5
             }
           }
         ]
@@ -112,12 +115,12 @@
       "isTextProp": true,
       "propName": "disclaimer",
       "position": {
-        "bottomPx": 40,
+        "bottomPx": 172,
         "centerHorizontal": true
       },
       "style": {
         "fontFamily": "Chesna Grotesk",
-        "fontSize": 20,
+        "fontSize": 16,
         "fontWeight": 400,
         "color": "#FFFFFF",
         "letterSpacing": 0.5,
@@ -134,23 +137,22 @@
         "disclaimer"
       ],
       "type": "fade-in",
-      "startFrame": 0,
+      "startFrame": 9,
       "postEffect": null
     }
   ],
   "textContent": {
-    "tagline": "SHOP MORE DEALS IN STORE AND ONLINE",
-    "disclaimer": "Ashley stores are independently owned and operated. ©2026 PLR FURNITURE, INC., DBA Ashley. All rights reserved.\nExpiration date 3/31/2026",
+    "tagline": "SHOP MORE DEALS IN STORE",
+    "disclaimer": "Ashley stores are independently owned and operated. ©2026 Roger's Furniture, DBA Ashley. All rights reserved.\nExpiration date 3/30/2026",
     "locations": [
       {
-        "city": "Del Rio",
-        "address": "504 E 10th St.\nDel Rio, TX 78840"
+        "city": "MARQUETTE",
+        "address": "2152 US Hwy 41 W"
       },
       {
-        "city": "Eagle Pass",
-        "address": "101 Aztec Dr.\nEagle Pass, TX 78852"
+        "city": "ESCANABA",
+        "address": "2222 North Lincoln Road"
       }
     ]
-  },
-  "notes": ""
+  }
 }

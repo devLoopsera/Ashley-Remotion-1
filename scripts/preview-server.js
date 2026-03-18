@@ -17,7 +17,8 @@ const multer = require("multer");
 
 require("dotenv").config();
 
-const {templatize, applyOverrides, findFontFiles} = require("./templatize");
+const {templatize, applyOverrides, findFontFiles, registerInRoot} = require("./templatize");
+const {execSync, exec} = require("child_process");
 const {generateComponent} = require("./generate-component");
 const {runQACheck, findSavedReference, fixHandTypedLogo} = require("./qa-check");
 const {extractLastFrame, transcodeForBrowser, enforceLogoSplit} = require("./analyze-design");
@@ -33,6 +34,7 @@ const TEMPLATES_DIR = path.join(RUNTIME_TMP_ROOT, "templates");
 
 const BRAND_LOGO_RE = /Ashley-Logo|HouseIcon/i;
 const IMAGE_EXTS = new Set([".png", ".jpg", ".jpeg", ".webp"]);
+const VIDEO_EXTS = new Set([".mp4", ".mov", ".webm"]);
 const FONT_EXTS = new Set([".ttf", ".otf", ".woff", ".woff2"]);
 
 // Ensure tmp & templates dirs exist
@@ -78,15 +80,20 @@ function parseUpload(req, res) {
 }
 
 // Serve static UI and public assets
-app.use(express.static(UI_DIR));
+app.use(express.static(UI_DIR, {
+  setHeaders: (res) => res.set('Cache-Control', 'no-cache, no-store')
+}));
 app.use("/public", express.static(PUBLIC_DIR));
 app.use("/tmp-preview", express.static(TMP_DIR));
+app.use("/templates", express.static(TEMPLATES_DIR));
+app.use("/out", express.static(path.join(__dirname, "..", "out")));
 app.use(express.json());
 
 // ── Assets endpoint ────────────────────────────────────────────────────────
 app.get("/api/assets", (_req, res) => {
   const logos = [];
   const bgImages = [];
+  const bgVideos = [];
   const fonts = new Set();
 
   // Scan flat files in public/
@@ -97,6 +104,8 @@ app.get("/api/assets", (_req, res) => {
     if (IMAGE_EXTS.has(ext)) {
       if (BRAND_LOGO_RE.test(f) || /^logo-/i.test(f)) logos.push(f);
       else if (/^bg-/i.test(f)) bgImages.push(f);
+    } else if (VIDEO_EXTS.has(ext) && /^bg-/i.test(f)) {
+      bgVideos.push(f);
     }
   }
 
@@ -113,7 +122,31 @@ app.get("/api/assets", (_req, res) => {
     }
   }
 
-  res.json({logos, bgImages, fonts: [...fonts].sort()});
+  res.json({logos, bgImages, bgVideos, fonts: [...fonts].sort()});
+});
+
+// ── Background file upload endpoint ───────────────────────────────────────
+const bgUploadMiddleware = multer({
+  storage: multer.diskStorage({
+    destination: PUBLIC_DIR,
+    filename: (req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase() || ".png";
+      cb(null, `bg-${Date.now()}${ext}`);
+    },
+  }),
+  fileFilter: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (IMAGE_EXTS.has(ext) || VIDEO_EXTS.has(ext)) cb(null, true);
+    else cb(new Error("Only image (.png/.jpg/.webp) and video (.mp4/.mov/.webm) files are allowed"));
+  },
+}).single("file");
+
+app.post("/api/upload-bg", (req, res) => {
+  bgUploadMiddleware(req, res, (err) => {
+    if (err) return res.status(400).json({error: err.message});
+    if (!req.file) return res.status(400).json({error: "No file uploaded"});
+    res.json({filename: req.file.filename});
+  });
 });
 
 // ── Font upload endpoint ───────────────────────────────────────────────────
@@ -612,9 +645,12 @@ app.get("/api/template-fields/:componentName", (req, res) => {
   res.json({fields});
 });
 
+// ── Template categories ──────────────────────────────────────────────────
+const TEMPLATE_CATEGORIES = ["promo", "tutorial", "vlog", "brand", "event", "seasonal", "other"];
+
 // ── Save as template ────────────────────────────────────────────────────
 app.post("/api/save-template", (req, res) => {
-  const {componentName, templateName, customizableFields} = req.body || {};
+  const {componentName, templateName, customizableFields, displayName, category, description} = req.body || {};
 
   if (!componentName || !/^[A-Z][A-Za-z0-9]*$/.test(componentName)) {
     return res.status(400).json({error: "Invalid component name"});
@@ -640,10 +676,22 @@ app.post("/api/save-template", (req, res) => {
     ? new Set(customizableFields)
     : new Set(allFields.map(f => f.id));
 
-  const templateFields = allFields.map(f => ({
-    ...f,
-    customizable: enabledFieldIds.has(f.id),
-  }));
+  // Split into variables (prop:* fields) and designFields (everything else)
+  const variables = [];
+  const designFields = [];
+  for (const f of allFields) {
+    const enriched = {...f, customizable: enabledFieldIds.has(f.id)};
+    if (f.id.startsWith("prop:")) {
+      variables.push({
+        ...enriched,
+        name: f.id.replace("prop:", ""),
+        placeholder: `e.g. ${typeof f.defaultValue === "string" ? f.defaultValue : JSON.stringify(f.defaultValue)}`.slice(0, 80),
+        required: f.id === "prop:locations" || f.id === "prop:tagline",
+      });
+    } else {
+      designFields.push(enriched);
+    }
+  }
 
   // Create template directory
   const templateDir = path.join(TEMPLATES_DIR, safeName);
@@ -654,10 +702,12 @@ app.post("/api/save-template", (req, res) => {
   fs.copyFileSync(specFile, path.join(templateDir, "spec.json"));
 
   // Copy reference screenshot if it exists
+  let hasPreview = false;
   for (const ext of [".png", ".jpg", ".jpeg", ".webp"]) {
     const refFile = path.join(SCENES_DIR, `.ref-${componentName}${ext}`);
     if (fs.existsSync(refFile)) {
       fs.copyFileSync(refFile, path.join(templateDir, `reference${ext}`));
+      hasPreview = true;
       break;
     }
   }
@@ -665,9 +715,14 @@ app.post("/api/save-template", (req, res) => {
   // Write template manifest
   const manifest = {
     name: safeName,
+    displayName: displayName || safeName,
+    category: TEMPLATE_CATEGORIES.includes(category) ? category : "other",
+    description: description || "",
     sourceComponent: componentName,
-    fields: templateFields,
+    variables,
+    designFields,
     spec,
+    hasPreview,
     createdAt: new Date().toISOString(),
   };
   fs.writeFileSync(path.join(templateDir, "template.json"), JSON.stringify(manifest, null, 2));
@@ -678,7 +733,7 @@ app.post("/api/save-template", (req, res) => {
 
 // ── List templates ──────────────────────────────────────────────────────
 app.get("/api/templates", (_req, res) => {
-  if (!fs.existsSync(TEMPLATES_DIR)) return res.json({templates: []});
+  if (!fs.existsSync(TEMPLATES_DIR)) return res.json({templates: [], categories: TEMPLATE_CATEGORIES});
 
   const templates = [];
   for (const entry of fs.readdirSync(TEMPLATES_DIR)) {
@@ -686,19 +741,350 @@ app.get("/api/templates", (_req, res) => {
     if (!fs.existsSync(manifestPath)) continue;
     try {
       const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
-      const customizableCount = manifest.fields.filter(f => f.customizable).length;
+      // Find preview image
+      let previewExt = null;
+      for (const ext of [".png", ".jpg", ".jpeg", ".webp"]) {
+        if (fs.existsSync(path.join(TEMPLATES_DIR, entry, `reference${ext}`))) { previewExt = ext; break; }
+      }
       templates.push({
         name: manifest.name,
+        displayName: manifest.displayName || manifest.name,
+        category: manifest.category || "other",
+        description: manifest.description || "",
         sourceComponent: manifest.sourceComponent,
-        fieldCount: manifest.fields.length,
-        customizableCount,
+        variableCount: (manifest.variables || manifest.fields || []).length,
+        hasPreview: !!previewExt,
+        previewUrl: previewExt ? `/templates/${entry}/reference${previewExt}` : null,
         createdAt: manifest.createdAt,
       });
     } catch {}
   }
 
   templates.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
-  res.json({templates});
+  res.json({templates, categories: TEMPLATE_CATEGORIES});
+});
+
+// ── Get template detail ─────────────────────────────────────────────────
+app.get("/api/templates/:name", (req, res) => {
+  const {name} = req.params;
+  const manifestPath = path.join(TEMPLATES_DIR, name, "template.json");
+  if (!fs.existsSync(manifestPath)) {
+    return res.status(404).json({error: `Template "${name}" not found`});
+  }
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+
+  // Migrate old format: if manifest has fields but no variables, split them
+  if (!manifest.variables && manifest.fields) {
+    manifest.variables = manifest.fields.filter(f => f.id.startsWith("prop:")).map(f => ({
+      ...f,
+      name: f.id.replace("prop:", ""),
+      placeholder: `e.g. ${typeof f.defaultValue === "string" ? f.defaultValue : JSON.stringify(f.defaultValue)}`.slice(0, 80),
+      required: f.id === "prop:locations" || f.id === "prop:tagline",
+    }));
+    manifest.designFields = manifest.fields.filter(f => !f.id.startsWith("prop:"));
+  }
+
+  // Find preview
+  let previewUrl = null;
+  for (const ext of [".png", ".jpg", ".jpeg", ".webp"]) {
+    if (fs.existsSync(path.join(TEMPLATES_DIR, name, `reference${ext}`))) {
+      previewUrl = `/templates/${name}/reference${ext}`;
+      break;
+    }
+  }
+
+  res.json({...manifest, previewUrl});
+});
+
+// ── Render from template (single) ───────────────────────────────────────
+const OUT_DIR = path.join(__dirname, "..", "out");
+
+function buildPropsFromVariables(variables, values) {
+  const props = {};
+  for (const v of variables) {
+    const key = v.name || v.id.replace("prop:", "");
+    if (values[key] !== undefined) {
+      props[key] = values[key];
+    } else if (v.defaultValue !== undefined) {
+      props[key] = v.defaultValue;
+    }
+  }
+  return props;
+}
+
+function ensureTemplateComponent(templateName, manifest) {
+  const componentDest = path.join(SCENES_DIR, `Generated_${manifest.sourceComponent}.tsx`);
+  const componentSrc = path.join(TEMPLATES_DIR, templateName, "component.tsx");
+
+  // Always copy from template source to ensure clean baseline
+  fs.copyFileSync(componentSrc, componentDest);
+
+  // Ensure registered in Root.tsx
+  const rootContent = fs.readFileSync(path.join(__dirname, "..", "src", "Root.tsx"), "utf8");
+  if (!rootContent.includes(`id="${manifest.sourceComponent}"`)) {
+    registerInRoot(manifest.sourceComponent, manifest.spec);
+    console.log(`Registered ${manifest.sourceComponent} in Root.tsx`);
+  }
+}
+
+/** Apply design overrides (background, logo, font) by patching the component TSX code */
+function applyDesignOverrides(componentPath, manifest, designOverrides) {
+  if (!designOverrides || Object.keys(designOverrides).length === 0) return;
+
+  let code = fs.readFileSync(componentPath, "utf8");
+  const spec = manifest.spec || {};
+
+  // Background override — supports solid color, image, video, transparent
+  const bgType = designOverrides.backgroundType || "solid";
+  if (designOverrides.background && spec.background) {
+    const oldColor = spec.background.color || "#000000";
+    const escapedOld = oldColor.replace('#', '\\#');
+
+    if (bgType === "solid") {
+      if (designOverrides.background !== oldColor) {
+        code = code.replace(
+          new RegExp(`backgroundColor:\\s*['"]${escapedOld}['"]`, "gi"),
+          `backgroundColor: '${designOverrides.background}'`
+        );
+      }
+    } else if (bgType === "transparent") {
+      code = code.replace(
+        new RegExp(`backgroundColor:\\s*['"]${escapedOld}['"]`, "gi"),
+        `backgroundColor: 'transparent'`
+      );
+    } else if (bgType === "image" || bgType === "video") {
+      const asset = designOverrides.background;
+      const isVideo = bgType === "video";
+      const remotionTag = isVideo ? "Video" : "Img";
+      const importName = isVideo ? "Video" : "Img";
+
+      // Add import if not already present
+      if (!code.includes(`${importName},`) && !code.includes(`${importName} }`) && !code.includes(`${importName}}`)) {
+        code = code.replace(
+          /from\s*['"]remotion['"]/,
+          (match) => {
+            const insertImport = `, ${importName}`;
+            return match.replace("from", `${insertImport}} from`).replace("}", "");
+          }
+        );
+        // Simpler: just ensure the import line includes it
+        if (!code.includes(`import {`) || !code.includes(importName)) {
+          code = code.replace(
+            /import\s*\{([^}]+)\}\s*from\s*['"]remotion['"]/,
+            (match, imports) => {
+              if (imports.includes(importName)) return match;
+              return match.replace(imports, `${imports.trim()}, ${importName}`);
+            }
+          );
+        }
+      }
+
+      // Replace the backgroundColor AbsoluteFill with a media background
+      // Pattern: <AbsoluteFill style={{backgroundColor: '#xxx'}}>
+      const bgRegex = new RegExp(
+        `(<AbsoluteFill\\s+style=\\{\\{\\s*backgroundColor:\\s*['"]${escapedOld}['"]\\s*\\}\\})>`,
+        "i"
+      );
+      const mediaElement = `<${remotionTag} src={staticFile('${asset}')} style={{width:'100%',height:'100%',objectFit:'cover',position:'absolute'}} />`;
+      if (bgRegex.test(code)) {
+        code = code.replace(bgRegex, `<AbsoluteFill>\n        ${mediaElement}`);
+      } else {
+        // Fallback: just replace backgroundColor value and add media element after the opening tag
+        code = code.replace(
+          new RegExp(`backgroundColor:\\s*['"]${escapedOld}['"]`, "gi"),
+          `backgroundColor: 'transparent'`
+        );
+      }
+    }
+  }
+
+  // Logo override — replace all logo staticFile references
+  if (designOverrides.logo) {
+    const allDesignFields = manifest.designFields || manifest.fields || [];
+    const logoField = allDesignFields.find(f => f.id === "logo");
+    const oldLogo = logoField ? logoField.defaultValue : null;
+    if (oldLogo && designOverrides.logo !== oldLogo) {
+      code = code.replace(
+        new RegExp(`staticFile\\(['"]${oldLogo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"]\\)`, "g"),
+        `staticFile('${designOverrides.logo}')`
+      );
+    }
+    // Also handle wordmark swap based on logo variant
+    if (designOverrides.logo.includes("white") || designOverrides.logo.includes("White")) {
+      code = code.replace(/staticFile\(['"]Ashley-Wordmark-Black[^'"]*['"]\)/g, `staticFile('Ashley-Wordmark-White_PNG_u7iaxp.png')`);
+    } else if (designOverrides.logo.includes("black") || designOverrides.logo.includes("Black")) {
+      code = code.replace(/staticFile\(['"]Ashley-Wordmark-White[^'"]*['"]\)/g, `staticFile('Ashley-Wordmark-Black_PNG_u7iaxp.png')`);
+    }
+  }
+
+  // Font family override
+  if (designOverrides.fontFamily) {
+    const allDesignFields = manifest.designFields || manifest.fields || [];
+    const fontField = allDesignFields.find(f => f.id === "fontFamily");
+    const oldFont = fontField ? fontField.defaultValue : null;
+    if (oldFont && designOverrides.fontFamily !== oldFont) {
+      // Replace literal font name strings in style objects
+      code = code.replace(
+        new RegExp(`fontFamily:\\s*['"]${oldFont.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"]`, "g"),
+        `fontFamily: '${designOverrides.fontFamily}'`
+      );
+      // Also replace CHESNA constant usage if the old font was Chesna Grotesk
+      if (oldFont === "Chesna Grotesk" || oldFont.toLowerCase().includes("chesna")) {
+        code = code.replace(/fontFamily:\s*CHESNA/g, `fontFamily: '${designOverrides.fontFamily}'`);
+      }
+    }
+  }
+
+  fs.writeFileSync(componentPath, code);
+}
+
+app.post("/api/render-from-template", (req, res) => {
+  const {templateName, variables: values, designOverrides} = req.body || {};
+  if (!templateName) return res.status(400).json({error: "templateName required"});
+
+  const manifestPath = path.join(TEMPLATES_DIR, templateName, "template.json");
+  if (!fs.existsSync(manifestPath)) return res.status(404).json({error: "Template not found"});
+
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  const vars = manifest.variables || (manifest.fields || []).filter(f => f.id.startsWith("prop:"));
+
+  // SSE setup
+  res.writeHead(200, {"Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive"});
+  const send = (data) => res.write(`data: ${JSON.stringify(data)}\n\n`);
+
+  (async () => {
+    try {
+      send({type: "log", text: "Setting up template component..."});
+      ensureTemplateComponent(templateName, manifest);
+
+      // Apply design overrides (background, logo, font) to the component code
+      const componentPath = path.join(SCENES_DIR, `Generated_${manifest.sourceComponent}.tsx`);
+      if (designOverrides) {
+        send({type: "log", text: "Applying design overrides..."});
+        applyDesignOverrides(componentPath, manifest, designOverrides);
+      }
+
+      const props = buildPropsFromVariables(vars, values || {});
+      if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, {recursive: true});
+
+      const timestamp = Date.now();
+      const isTransparent = designOverrides && designOverrides.backgroundType === "transparent";
+      const outputExt = isTransparent ? ".webm" : ".mp4";
+      const outputFile = `${manifest.sourceComponent}_${timestamp}${outputExt}`;
+      const outputPath = path.join(OUT_DIR, outputFile);
+      const propsFile = path.join(TMP_DIR, `.props-${timestamp}.json`);
+      fs.writeFileSync(propsFile, JSON.stringify(props));
+
+      const codecFlags = isTransparent ? ' --codec=vp8 --image-format=png' : '';
+      const cmd = `npx remotion render src/index.ts ${manifest.sourceComponent} "${outputPath.replace(/\\/g, "/")}" --props="${propsFile.replace(/\\/g, "/")}"${codecFlags}`;
+      send({type: "log", text: `Rendering ${isTransparent ? 'transparent WebM' : 'video'} with Remotion...`});
+
+      await new Promise((resolve, reject) => {
+        const child = exec(cmd, {cwd: path.resolve(__dirname, "..")});
+        child.stdout.on("data", (d) => send({type: "log", text: d.toString().trim()}));
+        child.stderr.on("data", (d) => send({type: "log", text: d.toString().trim()}));
+        child.on("close", (code) => {
+          try { fs.unlinkSync(propsFile); } catch {}
+          if (code === 0) resolve();
+          else reject(new Error(`Render failed with exit code ${code}`));
+        });
+      });
+
+      send({type: "done", file: outputFile, downloadUrl: `/out/${outputFile}`});
+    } catch (err) {
+      send({type: "error", message: err.message});
+    }
+    res.end();
+  })();
+});
+
+// ── Bulk render from template ───────────────────────────────────────────
+let bulkCancelFlag = false;
+
+app.post("/api/bulk-cancel", (_req, res) => {
+  bulkCancelFlag = true;
+  res.json({cancelled: true});
+});
+
+app.post("/api/bulk-render", (req, res) => {
+  const {templateName, rows, designOverrides} = req.body || {};
+  if (!templateName) return res.status(400).json({error: "templateName required"});
+  if (!Array.isArray(rows) || rows.length === 0) return res.status(400).json({error: "rows array required"});
+
+  const manifestPath = path.join(TEMPLATES_DIR, templateName, "template.json");
+  if (!fs.existsSync(manifestPath)) return res.status(404).json({error: "Template not found"});
+
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  const vars = manifest.variables || (manifest.fields || []).filter(f => f.id.startsWith("prop:"));
+
+  // SSE setup
+  res.writeHead(200, {"Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive"});
+  const send = (data) => res.write(`data: ${JSON.stringify(data)}\n\n`);
+
+  bulkCancelFlag = false;
+
+  (async () => {
+    try {
+      send({type: "log", text: "Setting up template component..."});
+      ensureTemplateComponent(templateName, manifest);
+
+      // Apply design overrides once for all rows
+      if (designOverrides && Object.keys(designOverrides).length > 0) {
+        const componentPath = path.join(SCENES_DIR, `Generated_${manifest.sourceComponent}.tsx`);
+        send({type: "log", text: "Applying design overrides..."});
+        applyDesignOverrides(componentPath, manifest, designOverrides);
+      }
+
+      if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, {recursive: true});
+
+      const files = [];
+      const total = rows.length;
+
+      for (let i = 0; i < total; i++) {
+        if (bulkCancelFlag) {
+          send({type: "cancelled", completedCount: files.length, totalCount: total});
+          break;
+        }
+
+        send({type: "row-start", index: i, total});
+        const props = buildPropsFromVariables(vars, rows[i]);
+        const timestamp = Date.now();
+        const bulkIsTransparent = designOverrides && designOverrides.backgroundType === "transparent";
+        const bulkExt = bulkIsTransparent ? ".webm" : ".mp4";
+        const outputFile = `${manifest.sourceComponent}_batch_${i + 1}_${timestamp}${bulkExt}`;
+        const outputPath = path.join(OUT_DIR, outputFile);
+        const propsFile = path.join(TMP_DIR, `.props-bulk-${timestamp}.json`);
+        fs.writeFileSync(propsFile, JSON.stringify(props));
+
+        const bulkCodecFlags = bulkIsTransparent ? ' --codec=vp8 --image-format=png' : '';
+        const cmd = `npx remotion render src/index.ts ${manifest.sourceComponent} "${outputPath.replace(/\\/g, "/")}" --props="${propsFile.replace(/\\/g, "/")}"${bulkCodecFlags}`;
+
+        try {
+          await new Promise((resolve, reject) => {
+            const child = exec(cmd, {cwd: path.resolve(__dirname, "..")});
+            child.stdout.on("data", (d) => send({type: "log", text: `[${i + 1}/${total}] ${d.toString().trim()}`}));
+            child.stderr.on("data", (d) => send({type: "log", text: `[${i + 1}/${total}] ${d.toString().trim()}`}));
+            child.on("close", (code) => {
+              try { fs.unlinkSync(propsFile); } catch {}
+              if (code === 0) resolve();
+              else reject(new Error(`Render ${i + 1} failed with exit code ${code}`));
+            });
+          });
+          files.push({index: i, file: outputFile, downloadUrl: `/out/${outputFile}`});
+          send({type: "row-done", index: i, file: outputFile, downloadUrl: `/out/${outputFile}`});
+        } catch (err) {
+          send({type: "row-error", index: i, error: err.message});
+        }
+      }
+
+      if (!bulkCancelFlag) {
+        send({type: "bulk-done", files, successCount: files.length, errorCount: total - files.length});
+      }
+    } catch (err) {
+      send({type: "error", message: err.message});
+    }
+    res.end();
+  })();
 });
 
 // ── List generated scenes ────────────────────────────────────────────────

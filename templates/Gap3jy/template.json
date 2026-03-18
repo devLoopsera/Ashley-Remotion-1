@@ -1,0 +1,243 @@
+{
+  "name": "Gap3jy",
+  "sourceComponent": "Gap3jy",
+  "fields": [
+    {
+      "id": "background",
+      "category": "design",
+      "label": "Background",
+      "type": "color",
+      "defaultValue": "#432D1F",
+      "customizable": true
+    },
+    {
+      "id": "logo",
+      "category": "design",
+      "label": "Logo",
+      "type": "image",
+      "defaultValue": "HouseIcon_white.png",
+      "customizable": true
+    },
+    {
+      "id": "prop:tagline",
+      "category": "content",
+      "label": "Tagline",
+      "type": "text",
+      "defaultValue": "SHOP MORE DEALS IN STORE",
+      "customizable": true
+    },
+    {
+      "id": "fontFamily",
+      "category": "design",
+      "label": "Font Family",
+      "type": "font",
+      "defaultValue": "Chesna Grotesk",
+      "customizable": true
+    },
+    {
+      "id": "prop:locations",
+      "category": "content",
+      "label": "Store Locations",
+      "type": "locations",
+      "defaultValue": [
+        {
+          "city": "MARQUETTE",
+          "address": "2152 US Hwy 41 W"
+        },
+        {
+          "city": "ESCANABA",
+          "address": "2222 North Lincoln Road"
+        }
+      ],
+      "customizable": true
+    },
+    {
+      "id": "color:city",
+      "category": "design",
+      "label": "city color",
+      "type": "color",
+      "defaultValue": "#FFFFFF",
+      "customizable": true
+    },
+    {
+      "id": "color:address",
+      "category": "design",
+      "label": "address color",
+      "type": "color",
+      "defaultValue": "#FFFFFF",
+      "customizable": true
+    },
+    {
+      "id": "prop:disclaimer",
+      "category": "content",
+      "label": "Disclaimer",
+      "type": "text",
+      "defaultValue": "Ashley stores are independently owned and operated. ©2026 Roger's Furniture, DBA Ashley. All rights reserved. Expiration date 3/30/2026",
+      "customizable": true
+    }
+  ],
+  "spec": {
+    "durationFrames": 67,
+    "fps": 30,
+    "width": 1920,
+    "height": 1080,
+    "background": {
+      "type": "solid",
+      "color": "#432D1F"
+    },
+    "elements": [
+      {
+        "id": "logo-group",
+        "type": "group",
+        "position": {
+          "topPercent": 34,
+          "centerHorizontal": true
+        },
+        "children": [
+          {
+            "id": "logo-icon",
+            "type": "image",
+            "asset": "HouseIcon_white.png",
+            "size": {
+              "height": 108
+            }
+          },
+          {
+            "id": "logo-wordmark",
+            "type": "image",
+            "asset": "Ashley-Wordmark-White_PNG_u7iaxp.png",
+            "size": {
+              "height": 100
+            }
+          }
+        ],
+        "layout": {
+          "direction": "row",
+          "gap": 20,
+          "alignItems": "center"
+        }
+      },
+      {
+        "id": "tagline",
+        "type": "text",
+        "content": "SHOP MORE DEALS IN STORE",
+        "isTextProp": true,
+        "propName": "tagline",
+        "style": {
+          "fontFamily": "Chesna Grotesk",
+          "fontSize": 28,
+          "fontWeight": 400,
+          "color": "#FFFFFF",
+          "letterSpacing": "1.5px",
+          "textTransform": "uppercase"
+        },
+        "position": {
+          "belowElement": "logo-group",
+          "marginTop": 15,
+          "centerHorizontal": true
+        }
+      },
+      {
+        "id": "locations",
+        "type": "group",
+        "isArrayProp": true,
+        "propName": "locations",
+        "position": {
+          "bottomPx": 250,
+          "centerHorizontal": true
+        },
+        "layout": {
+          "direction": "row",
+          "gap": 450,
+          "alignItems": "flex-start"
+        },
+        "itemTemplate": {
+          "children": [
+            {
+              "id": "city",
+              "type": "text",
+              "propPath": "city",
+              "style": {
+                "fontFamily": "Chesna Grotesk",
+                "fontSize": 60,
+                "fontWeight": 600,
+                "color": "#FFFFFF",
+                "letterSpacing": "2px",
+                "textTransform": "uppercase",
+                "textAlign": "center"
+              }
+            },
+            {
+              "id": "address",
+              "type": "text",
+              "propPath": "address",
+              "style": {
+                "fontFamily": "Chesna Grotesk",
+                "fontSize": 44,
+                "fontWeight": 400,
+                "color": "#FFFFFF",
+                "letterSpacing": "1px",
+                "textAlign": "center"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "disclaimer",
+        "type": "text",
+        "content": null,
+        "isTextProp": true,
+        "propName": "disclaimer",
+        "position": {
+          "bottomPx": 90,
+          "centerHorizontal": true
+        },
+        "style": {
+          "fontFamily": "Chesna Grotesk",
+          "fontSize": 20,
+          "fontWeight": 400,
+          "color": "#E0E0E0",
+          "letterSpacing": "0.5px",
+          "textAlign": "center"
+        }
+      }
+    ],
+    "animations": [
+      {
+        "targets": [
+          "locations"
+        ],
+        "type": "fade-in",
+        "startFrame": 6,
+        "postEffect": null
+      },
+      {
+        "targets": [
+          "logo-group",
+          "tagline",
+          "disclaimer"
+        ],
+        "type": "fade-in",
+        "startFrame": 9,
+        "postEffect": null
+      }
+    ],
+    "textContent": {
+      "tagline": "SHOP MORE DEALS IN STORE",
+      "disclaimer": "Ashley stores are independently owned and operated. ©2026 Roger's Furniture, DBA Ashley. All rights reserved. Expiration date 3/30/2026",
+      "locations": [
+        {
+          "city": "MARQUETTE",
+          "address": "2152 US Hwy 41 W"
+        },
+        {
+          "city": "ESCANABA",
+          "address": "2222 North Lincoln Road"
+        }
+      ]
+    },
+    "notes": []
+  },
+  "createdAt": "2026-03-18T05:40:41.478Z"
+}

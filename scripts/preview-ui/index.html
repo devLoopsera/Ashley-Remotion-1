@@ -909,6 +909,18 @@
     }
     .font-select:focus { border-color: rgba(255,255,255,0.4); }
     .font-select option { background: #2a1a0a; }
+
+    /* ── Browse Templates link ── */
+    .browse-templates-link {
+      display: inline-flex; align-items: center; gap: 8px;
+      width: 100%; max-width: 600px; margin-bottom: 24px;
+      padding: 14px 20px; border-radius: 10px;
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.6); font-size: 13px; letter-spacing: 1px;
+      text-decoration: none; transition: all 0.15s;
+    }
+    .browse-templates-link:hover { border-color: rgba(255,165,0,0.35); color: rgba(255,165,0,0.85); background: rgba(255,165,0,0.05); }
+    .browse-templates-link .arrow { margin-left: auto; font-size: 16px; }
   </style>
 </head>
 <body>
@@ -928,6 +940,12 @@
     </div>
     <div class="carousel-track" id="scene-carousel"></div>
   </div>
+
+  <!-- Browse Templates link -->
+  <a class="browse-templates-link" href="/templates.html" id="browse-templates-link" style="display:none;">
+    Browse Template Library
+    <span class="arrow">&rsaquo;</span>
+  </a>
 
   <div class="card">
 
@@ -1124,7 +1142,7 @@
 
   </div>
 
-  <!-- Template modal -->
+  <!-- Template save modal -->
   <div class="modal-overlay" id="template-modal">
     <div class="modal">
       <button class="modal-close" id="template-modal-close">&times;</button>
@@ -1134,7 +1152,24 @@
       <label style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.35);display:block;margin-bottom:6px;">Template Name</label>
       <input type="text" class="modal-field-name" id="template-name-input" placeholder="e.g. SpringSaleEndCard" />
 
-      <div style="display:flex;justify-content:space-between;align-items:center;">
+      <label style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.35);display:block;margin-bottom:6px;margin-top:12px;">Display Name</label>
+      <input type="text" class="modal-field-name" id="template-display-name" placeholder="e.g. Spring Sale End Card" />
+
+      <label style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.35);display:block;margin-bottom:6px;margin-top:12px;">Category</label>
+      <select class="font-select" id="template-category">
+        <option value="promo">Promo</option>
+        <option value="brand">Brand</option>
+        <option value="event">Event</option>
+        <option value="seasonal">Seasonal</option>
+        <option value="tutorial">Tutorial</option>
+        <option value="vlog">Vlog</option>
+        <option value="other">Other</option>
+      </select>
+
+      <label style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.35);display:block;margin-bottom:6px;margin-top:12px;">Description</label>
+      <textarea class="var-input" id="template-description" rows="2" placeholder="Short note on when/where to use this template..." style="resize:vertical;"></textarea>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;">
         <div class="modal-cat-label" style="margin-top:0;">Customizable Fields</div>
         <button class="modal-select-all" id="template-toggle-all">Deselect all</button>
       </div>
@@ -1146,6 +1181,7 @@
       </div>
     </div>
   </div>
+
 
   <script>
     const IS_HOSTED_RUNTIME = !['localhost', '127.0.0.1'].includes(window.location.hostname);
@@ -2179,13 +2215,18 @@
     let templateFields = [];
 
     document.getElementById('btn-save-template').addEventListener('click', async () => {
-      if (!currentComponentName) return;
+      console.log('[save-template] clicked, componentName:', currentComponentName);
+      if (!currentComponentName) {
+        alert('No component selected — please generate or select a scene first.');
+        return;
+      }
 
-      // Pre-fill template name
-      templateNameInput.value = currentComponentName;
+      const btn = document.getElementById('btn-save-template');
+      btn.disabled = true;
+      btn.textContent = 'Loading...';
 
-      // Fetch customizable fields from server
       try {
+        templateNameInput.value = currentComponentName;
         const resp = await fetch(`/api/template-fields/${currentComponentName}`);
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error || 'Failed to load fields');
@@ -2193,7 +2234,11 @@
         renderTemplateFields(templateFields);
         templateModal.classList.add('visible');
       } catch (e) {
+        console.error('[save-template] error:', e);
         alert('Error loading template fields: ' + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save as Template';
       }
     });
 
@@ -2294,6 +2339,9 @@
             componentName: currentComponentName,
             templateName: name,
             customizableFields: selectedFields,
+            displayName: document.getElementById('template-display-name').value.trim() || name,
+            category: document.getElementById('template-category').value,
+            description: document.getElementById('template-description').value.trim(),
           }),
         });
         const data = await resp.json();
@@ -2304,6 +2352,9 @@
         // Update success message
         successTitle.textContent = `Template "${data.templateName}" saved`;
         successSub.textContent = `Saved to ${data.templateDir}/ with ${selectedFields.length} customizable field(s)`;
+
+        // Reload template library
+        loadTemplates();
       } catch (e) {
         alert('Error saving template: ' + e.message);
       } finally {
@@ -2416,6 +2467,23 @@
 
     initMarkerBar();
     loadScenes();
+
+    // ── Browse Templates link (show only if templates exist) ──────
+    async function loadTemplates() {
+      try {
+        const {templates} = await fetch('/api/templates').then(r => r.json());
+        const link = document.getElementById('browse-templates-link');
+        if (templates && templates.length > 0) {
+          link.style.display = 'inline-flex';
+          link.textContent = `Browse Template Library (${templates.length})`;
+          const arrow = document.createElement('span');
+          arrow.className = 'arrow';
+          arrow.innerHTML = '&rsaquo;';
+          link.appendChild(arrow);
+        }
+      } catch (e) { console.error('Failed to load templates:', e); }
+    }
+    loadTemplates();
 
   </script>
 </body>

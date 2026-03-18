@@ -1,170 +1,181 @@
 import React from 'react';
 import {
-  AbsoluteFill,
-  Img,
-  spring,
-  staticFile,
-  useCurrentFrame,
-  useVideoConfig,
+	useCurrentFrame,
+	useVideoConfig,
+	AbsoluteFill,
+	staticFile,
+	spring,
+	interpolate,
+	Img,
 } from 'remotion';
 import {CHESNA, useFonts} from '../loadFonts';
 
 export type DedluoProps = {
-  tagline: string;
-  locations: Array<{
-    city: string;
-    address: string;
-  }>;
-  disclaimer: string;
+	tagline: string;
+	locations: {
+		city: string;
+		address: string;
+	}[];
+	disclaimer: string;
 };
 
 export const Dedluo: React.FC<DedluoProps> = ({
-  tagline,
-  locations,
-  disclaimer,
+	tagline,
+	locations,
+	disclaimer,
 }) => {
-  useFonts();
-  const frame = useCurrentFrame();
-  const {fps} = useVideoConfig();
+	useFonts();
+	const frame = useCurrentFrame();
+	const {fps} = useVideoConfig();
 
-  // Animation: All elements fade in starting at frame 0
-  const fadeIn = spring({
-    frame,
-    fps,
-    config: {damping: 12, mass: 0.5},
-  });
+	const fadeIn = spring({
+		frame: frame - 9,
+		fps,
+		config: {damping: 12, mass: 0.5},
+	});
 
-  return (
-    <AbsoluteFill style={{backgroundColor: '#4A2F1F'}}>
-      {/* Main Content: Logo, Tagline, Locations */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '32%',
-          left: 0,
-          right: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          opacity: fadeIn,
-        }}
-      >
-        {/* Logo Group */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 25,
-          }}
-        >
-          <Img
-            src={staticFile('HouseIcon_white.png')}
-            style={{height: 90, width: 'auto'}}
-          />
-          <Img
-            src={staticFile('Ashley-Wordmark-White_PNG_u7iaxp.png')}
-            style={{height: 50, width: 'auto'}}
-          />
-        </div>
+	// Throb animation for the house icon, starting after it fades in
+	const throbProgress = spring({
+		frame: frame - 29, // Starts 20 frames after the fadeIn
+		fps,
+		config: {damping: 8, mass: 0.6},
+	});
+	const throbScale = interpolate(throbProgress, [0, 0.5, 1], [1.0, 1.45, 1.0]);
 
-        {/* Tagline */}
-        <p
-          style={{
-            fontFamily: CHESNA,
-            fontSize: 28,
-            fontWeight: 600,
-            color: '#FFFFFF',
-            letterSpacing: 1.5,
-            textTransform: 'uppercase',
-            textAlign: 'center',
-            marginTop: 20,
-            marginBottom: 0,
-          }}
-        >
-          {tagline}
-        </p>
+	return (
+		<AbsoluteFill style={{backgroundColor: '#40291C'}}>
+			{/* Logo and Tagline Container */}
+			<div
+				style={{
+					position: 'absolute',
+					top: '30.5%',
+					left: '50%',
+					transform: 'translateX(-50%)',
+					display: 'flex',
+					flexDirection: 'column',
+					alignItems: 'center',
+					opacity: fadeIn,
+				}}
+			>
+				{/* Logo Group */}
+				<div
+					style={{
+						display: 'flex',
+						flexDirection: 'row',
+						alignItems: 'center',
+						gap: 22,
+					}}
+				>
+					<div style={{transform: `scale(${throbScale})`}}>
+						<Img
+							src={staticFile('HouseIcon_white.png')}
+							style={{height: 86, width: 'auto'}}
+						/>
+					</div>
+					<Img
+						src={staticFile('Ashley-Wordmark-White_PNG_u7iaxp.png')}
+						style={{height: 100, width: 'auto'}}
+					/>
+				</div>
 
-        {/* Locations */}
-        <div
-          style={{
-            marginTop: 90,
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'flex-start',
-            justifyContent: 'center',
-            gap: 250,
-          }}
-        >
-          {locations.map((location) => (
-            <div
-              key={location.city}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                textAlign: 'center',
-              }}
-            >
-              <p
-                style={{
-                  fontFamily: CHESNA,
-                  fontSize: 48,
-                  fontWeight: 600,
-                  color: '#FFFFFF',
-                  letterSpacing: 0,
-                  textTransform: 'none',
-                  margin: 0,
-                }}
-              >
-                {location.city}
-              </p>
-              <p
-                style={{
-                  fontFamily: CHESNA,
-                  fontSize: 42,
-                  fontWeight: 400,
-                  color: '#FFFFFF',
-                  letterSpacing: 0,
-                  lineHeight: 1.2,
-                  whiteSpace: 'pre-line',
-                  margin: 0,
-                }}
-              >
-                {location.address}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
+				{/* Tagline */}
+				<p
+					style={{
+						fontFamily: CHESNA,
+						fontSize: 28,
+						fontWeight: 600,
+						color: '#FFFFFF',
+						letterSpacing: 1.5,
+						textTransform: 'uppercase',
+						margin: 0,
+						marginTop: 45,
+					}}
+				>
+					{tagline}
+				</p>
+			</div>
 
-      {/* Disclaimer */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 40,
-          left: 0,
-          right: 0,
-          paddingLeft: 40,
-          paddingRight: 40,
-          opacity: fadeIn,
-        }}
-      >
-        <p
-          style={{
-            fontFamily: CHESNA,
-            fontSize: 20,
-            fontWeight: 400,
-            color: '#FFFFFF',
-            letterSpacing: 0.5,
-            textAlign: 'center',
-            whiteSpace: 'pre-line',
-            margin: 0,
-          }}
-        >
-          {disclaimer}
-        </p>
-      </div>
-    </AbsoluteFill>
-  );
+			{/* Locations Group */}
+			<div
+				style={{
+					position: 'absolute',
+					bottom: 292,
+					left: '50%',
+					transform: 'translateX(-50%)',
+					display: 'flex',
+					flexDirection: 'row',
+					alignItems: 'flex-start',
+					gap: 160,
+					opacity: fadeIn,
+				}}
+			>
+				{locations.map((loc, index) => (
+					<div
+						key={index}
+						style={{
+							display: 'flex',
+							flexDirection: 'column',
+							alignItems: 'center',
+							gap: 26,
+						}}
+					>
+						<p
+							style={{
+								fontFamily: CHESNA,
+								fontSize: 46,
+								fontWeight: 600,
+								color: '#FFFFFF',
+								letterSpacing: 2,
+								textTransform: 'uppercase',
+								margin: 0,
+								textAlign: 'center',
+							}}
+						>
+							{loc.city}
+						</p>
+						<p
+							style={{
+								fontFamily: CHESNA,
+								fontSize: 36,
+								fontWeight: 400,
+								color: '#FFFFFF',
+								letterSpacing: 0.5,
+								margin: 0,
+								textAlign: 'center',
+							}}
+						>
+							{loc.address}
+						</p>
+					</div>
+				))}
+			</div>
+
+			{/* Disclaimer */}
+			<div
+				style={{
+					position: 'absolute',
+					bottom: 172,
+					left: '50%',
+					transform: 'translateX(-50%)',
+					width: '90%',
+					opacity: fadeIn,
+				}}
+			>
+				<p
+					style={{
+						fontFamily: CHESNA,
+						fontSize: 16,
+						fontWeight: 400,
+						color: '#FFFFFF',
+						letterSpacing: 0.5,
+						textAlign: 'center',
+						margin: 0,
+						whiteSpace: 'pre-wrap',
+					}}
+				>
+					{disclaimer}
+				</p>
+			</div>
+		</AbsoluteFill>
+	);
 };

@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Template Library — Ashley End Screen Generator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #1a1008; color: #fff; min-height: 100vh; }
+
+    /* ── Header ── */
+    header {
+      display: flex; align-items: center; gap: 14px; padding: 18px 28px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    header svg { flex-shrink: 0; }
+    header h1 { font-size: 14px; letter-spacing: 3px; text-transform: uppercase; font-weight: 500; color: rgba(255,255,255,0.75); }
+    .header-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+    .btn-back {
+      font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+      color: rgba(255,255,255,0.4); text-decoration: none;
+      padding: 6px 14px; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;
+      transition: all 0.15s;
+    }
+    .btn-back:hover { color: rgba(255,255,255,0.7); border-color: rgba(255,255,255,0.25); }
+
+    /* ── Main layout ── */
+    .page { max-width: 1100px; margin: 0 auto; padding: 28px 24px 60px; }
+    .page-title { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+    .page-sub { font-size: 12px; color: rgba(255,255,255,0.3); margin-bottom: 20px; }
+
+    /* ── Search ── */
+    .search-bar {
+      width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px; color: #fff; font-size: 13px; padding: 10px 14px; outline: none;
+      margin-bottom: 14px; transition: border-color 0.15s;
+    }
+    .search-bar:focus { border-color: rgba(255,255,255,0.3); }
+    .search-bar::placeholder { color: rgba(255,255,255,0.2); }
+
+    /* ── Filters ── */
+    .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+    .filter-pill {
+      font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+      padding: 5px 14px; border-radius: 20px; cursor: pointer;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.4); transition: all 0.15s;
+    }
+    .filter-pill:hover { border-color: rgba(255,255,255,0.25); color: rgba(255,255,255,0.6); }
+    .filter-pill.active { background: rgba(255,165,0,0.12); border-color: rgba(255,165,0,0.3); color: rgba(255,165,0,0.8); }
+
+    /* ── Card grid ── */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; }
+    .tpl-card {
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;
+      background: rgba(255,255,255,0.025); overflow: hidden; cursor: pointer;
+      transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+    }
+    .tpl-card:hover { border-color: rgba(255,255,255,0.25); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+    .tpl-card-thumb { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; background: rgba(0,0,0,0.3); }
+    .tpl-card-no-thumb { width: 100%; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.1); font-size: 36px; }
+    .tpl-card-body { padding: 14px 16px; }
+    .tpl-card-name { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.9); margin-bottom: 6px; }
+    .tpl-card-desc { font-size: 11px; color: rgba(255,255,255,0.35); line-height: 1.5; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 33px; }
+    .tpl-card-footer { display: flex; align-items: center; justify-content: space-between; }
+    .tpl-card-badge {
+      font-size: 9px; letter-spacing: 0.5px; text-transform: uppercase;
+      padding: 3px 8px; border-radius: 4px;
+      background: rgba(255,165,0,0.1); color: rgba(255,165,0,0.55);
+      border: 1px solid rgba(255,165,0,0.15);
+    }
+    .tpl-card-info { font-size: 10px; color: rgba(255,255,255,0.2); }
+    .empty-state { text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.2); font-size: 13px; }
+
+    /* ── Detail modal ── */
+    .detail-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 1001; justify-content: center; align-items: flex-start; overflow-y: auto; padding: 40px 20px; }
+    .detail-overlay.visible { display: flex; }
+    .detail-modal { background: #1e1510; border-radius: 14px; padding: 28px; max-width: 640px; width: 100%; position: relative; }
+    .modal-close { position: absolute; top: 12px; right: 14px; background: none; border: none; color: rgba(255,255,255,0.3); font-size: 22px; cursor: pointer; }
+    .modal-close:hover { color: #fff; }
+    .detail-preview { width: 100%; border-radius: 8px; margin-bottom: 16px; }
+    .detail-name { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+    .detail-meta { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+    .detail-desc { font-size: 12px; color: rgba(255,255,255,0.4); line-height: 1.5; margin-bottom: 18px; }
+    .detail-section-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 10px; }
+    .var-row { margin-bottom: 14px; }
+    .var-label { font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+    .var-tag { font-size: 9px; padding: 1px 5px; border-radius: 3px; background: rgba(100,200,255,0.1); color: rgba(100,200,255,0.6); border: 1px solid rgba(100,200,255,0.15); font-family: monospace; }
+    .var-input { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; color: #fff; font-size: 13px; padding: 8px 12px; outline: none; }
+    .var-input:focus { border-color: rgba(255,255,255,0.35); }
+    select.var-input { background: #1e1510; }
+    select.var-input option { background: #1e1510; color: #fff; }
+
+    /* ── Preview dropdown (custom select with thumbnails) ── */
+    .preview-dropdown { position: relative; width: 100%; }
+    .preview-selected {
+      width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 6px; color: #fff; font-size: 13px; padding: 8px 12px; cursor: pointer;
+      display: flex; align-items: center; gap: 10px; min-height: 38px;
+      transition: border-color 0.15s;
+    }
+    .preview-selected:hover { border-color: rgba(255,255,255,0.3); }
+    .preview-selected.open { border-color: rgba(255,255,255,0.4); border-radius: 6px 6px 0 0; }
+    .preview-selected-thumb { width: 32px; height: 32px; object-fit: contain; border-radius: 3px; flex-shrink: 0; background: rgba(0,0,0,0.3); }
+    .preview-selected-vid { width: 48px; height: 28px; object-fit: cover; border-radius: 3px; flex-shrink: 0; background: rgba(0,0,0,0.3); }
+    .preview-selected-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+    .preview-selected-arrow { color: rgba(255,255,255,0.3); font-size: 10px; flex-shrink: 0; }
+    .preview-list {
+      display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 1020;
+      background: #1e1510; border: 1px solid rgba(255,255,255,0.2); border-top: none;
+      border-radius: 0 0 6px 6px; max-height: 240px; overflow-y: auto;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    }
+    .preview-list.open { display: block; }
+    .preview-item {
+      display: flex; align-items: center; gap: 10px; padding: 8px 12px; cursor: pointer;
+      transition: background 0.1s; border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .preview-item:hover { background: rgba(255,255,255,0.08); }
+    .preview-item.selected { background: rgba(255,165,0,0.1); }
+    .preview-item-thumb { width: 40px; height: 40px; object-fit: contain; border-radius: 3px; flex-shrink: 0; background: rgba(0,0,0,0.3); }
+    .preview-item-vid { width: 56px; height: 32px; object-fit: cover; border-radius: 3px; flex-shrink: 0; background: rgba(0,0,0,0.3); }
+    .preview-item-name { flex: 1; font-size: 11px; color: rgba(255,255,255,0.7); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    textarea.var-input { resize: vertical; min-height: 34px; font-family: inherit; line-height: 1.4; overflow: hidden; }
+
+    /* ── Background type selector ── */
+    .bg-type-tabs { display: flex; gap: 0; margin-bottom: 10px; border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.12); }
+    .bg-type-tab {
+      flex: 1; padding: 6px 10px; font-size: 10px; letter-spacing: 0.5px; text-transform: uppercase;
+      background: rgba(255,255,255,0.03); border: none; color: rgba(255,255,255,0.35); cursor: pointer;
+      transition: all 0.15s; border-right: 1px solid rgba(255,255,255,0.08);
+    }
+    .bg-type-tab:last-child { border-right: none; }
+    .bg-type-tab:hover { color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.06); }
+    .bg-type-tab.active { background: rgba(255,165,0,0.12); color: rgba(255,165,0,0.85); }
+    .bg-type-panel { display: none; }
+    .bg-type-panel.visible { display: block; }
+    .bg-upload-btn {
+      font-size: 11px; color: rgba(255,255,255,0.4); background: none;
+      border: 1px dashed rgba(255,255,255,0.15); border-radius: 6px;
+      padding: 8px 14px; cursor: pointer; margin-top: 6px; transition: all 0.15s;
+    }
+    .bg-upload-btn:hover { color: rgba(255,255,255,0.7); border-color: rgba(255,255,255,0.3); }
+    .bg-upload-btn input { display: none; }
+    .loc-group { display: flex; flex-direction: column; gap: 6px; }
+    .loc-row { display: flex; gap: 8px; align-items: center; }
+    .loc-row input { flex: 1; }
+    .loc-btn { font-size: 16px; background: none; border: 1px solid rgba(255,255,255,0.12); border-radius: 4px; color: rgba(255,255,255,0.4); cursor: pointer; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
+    .loc-btn:hover { border-color: rgba(255,255,255,0.3); color: rgba(255,255,255,0.7); }
+    .detail-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .detail-actions button { flex: 1; padding: 10px; border-radius: 8px; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; font-weight: 600; }
+    .btn-render-single { background: #e8740e; border: none; color: #fff; }
+    .btn-render-single:hover { opacity: 0.88; }
+    .btn-render-single:disabled { opacity: 0.3; cursor: not-allowed; }
+    .btn-bulk-open { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.18); color: rgba(255,255,255,0.7); }
+    .btn-bulk-open:hover { border-color: rgba(255,255,255,0.35); color: #fff; }
+    .detail-render-progress { margin-top: 14px; display: none; }
+    .detail-render-progress.visible { display: block; }
+    .detail-render-log { font-size: 11px; color: rgba(255,255,255,0.3); max-height: 120px; overflow-y: auto; white-space: pre-wrap; font-family: monospace; background: rgba(0,0,0,0.3); border-radius: 6px; padding: 8px; margin-top: 8px; }
+    .detail-download { display: none; margin-top: 10px; }
+    .detail-download.visible { display: block; }
+    .detail-download a { color: #e8740e; text-decoration: underline; font-size: 12px; }
+
+    /* ── Bulk modal ── */
+    .bulk-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1002; justify-content: center; align-items: flex-start; overflow-y: auto; padding: 30px 20px; }
+    .bulk-overlay.visible { display: flex; }
+    .bulk-modal { background: #1e1510; border-radius: 14px; padding: 28px; max-width: 800px; width: 100%; position: relative; }
+    .modal-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+    .modal-sub { font-size: 12px; color: rgba(255,255,255,0.35); margin-bottom: 16px; }
+    .bulk-upload-zone { border: 2px dashed rgba(255,255,255,0.12); border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; margin-bottom: 14px; transition: border-color 0.15s; }
+    .bulk-upload-zone:hover { border-color: rgba(255,255,255,0.3); }
+    .bulk-upload-zone input { display: none; }
+    .bulk-upload-label { font-size: 12px; color: rgba(255,255,255,0.4); }
+    .bulk-format-help { font-size: 10px; color: rgba(255,255,255,0.2); margin-bottom: 14px; line-height: 1.6; }
+    .bulk-format-help code { background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 3px; font-size: 10px; }
+    .bulk-table-wrap { max-height: 300px; overflow: auto; margin-bottom: 14px; }
+    .bulk-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .bulk-table th { text-align: left; padding: 6px 8px; color: rgba(255,255,255,0.4); border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 9px; position: sticky; top: 0; background: #1e1510; }
+    .bulk-table td { padding: 4px 6px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .bulk-table input { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; color: #fff; font-size: 11px; padding: 5px 7px; outline: none; }
+    .bulk-table input:focus { border-color: rgba(255,255,255,0.3); }
+    .bulk-table .row-num { color: rgba(255,255,255,0.15); font-size: 10px; width: 30px; text-align: center; }
+    .bulk-table .row-del { background: none; border: none; color: rgba(255,100,100,0.4); cursor: pointer; font-size: 14px; padding: 2px 6px; }
+    .bulk-table .row-del:hover { color: rgba(255,100,100,0.8); }
+    .bulk-add-row { font-size: 11px; color: rgba(255,255,255,0.35); background: none; border: 1px dashed rgba(255,255,255,0.12); border-radius: 6px; padding: 6px 14px; cursor: pointer; margin-bottom: 14px; }
+    .bulk-table input[data-loc-edit] { cursor: pointer; color: rgba(255,200,100,0.7); }
+
+    /* ── Location popover ── */
+    .loc-popover {
+      position: fixed; background: #1e1510; border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px; padding: 14px; z-index: 1010; min-width: 340px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    }
+    .loc-popover-title { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 8px; }
+    .loc-popover-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+    .loc-popover-row input {
+      flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 4px; color: #fff; font-size: 12px; padding: 6px 8px; outline: none;
+    }
+    .loc-popover-row input:focus { border-color: rgba(255,255,255,0.3); }
+    .loc-popover-del { background: none; border: none; color: rgba(255,100,100,0.4); cursor: pointer; font-size: 14px; padding: 2px 4px; }
+    .loc-popover-del:hover { color: rgba(255,100,100,0.8); }
+    .loc-popover-actions { display: flex; gap: 8px; margin-top: 8px; }
+    .loc-popover-add { font-size: 11px; color: rgba(255,255,255,0.35); background: none; border: 1px dashed rgba(255,255,255,0.12); border-radius: 4px; padding: 4px 10px; cursor: pointer; }
+    .loc-popover-add:hover { color: rgba(255,255,255,0.6); border-color: rgba(255,255,255,0.25); }
+    .loc-popover-apply { font-size: 11px; background: #e8740e; border: none; color: #fff; border-radius: 4px; padding: 5px 14px; cursor: pointer; font-weight: 600; margin-left: auto; }
+    .loc-popover-apply:hover { opacity: 0.85; }
+    .bulk-add-row:hover { color: rgba(255,255,255,0.6); border-color: rgba(255,255,255,0.25); }
+    .bulk-actions { display: flex; gap: 10px; align-items: center; }
+    .bulk-actions button { padding: 10px 20px; border-radius: 8px; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; font-weight: 600; }
+    .btn-bulk-generate { background: #e8740e; border: none; color: #fff; }
+    .btn-bulk-generate:hover { opacity: 0.88; }
+    .btn-bulk-generate:disabled { opacity: 0.3; cursor: not-allowed; }
+    .btn-bulk-cancel-action { background: rgba(255,100,100,0.1); border: 1px solid rgba(255,100,100,0.2); color: rgba(255,100,100,0.7); display: none; }
+    .modal-btn-cancel { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.5); padding: 10px 20px; border-radius: 8px; font-size: 12px; cursor: pointer; }
+    .bulk-progress { margin-top: 14px; }
+    .bulk-progress-item { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 11px; }
+    .bulk-progress-item .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .bulk-progress-item .status-dot.pending { background: rgba(255,255,255,0.15); }
+    .bulk-progress-item .status-dot.active { background: #e8740e; animation: pulse 1s infinite; }
+    .bulk-progress-item .status-dot.done { background: #4caf50; }
+    .bulk-progress-item .status-dot.error { background: #f44336; }
+    .bulk-progress-item .item-label { color: rgba(255,255,255,0.5); flex: 1; }
+    .bulk-progress-item a { color: #e8740e; text-decoration: underline; font-size: 10px; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  </style>
+</head>
+<body>
+
+  <header>
+    <svg width="30" height="30" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20 4L36 18V36H26V26H14V36H4V18L20 4Z" fill="white"/>
+    </svg>
+    <h1>Template Library</h1>
+    <div class="header-right">
+      <a href="/" class="btn-back">Back to Generator</a>
+    </div>
+  </header>
+
+  <div class="page">
+    <div class="page-title">End Screen Templates</div>
+    <div class="page-sub" id="page-sub">Browse, customize, and generate end cards at scale</div>
+
+    <input class="search-bar" id="search-bar" type="text" placeholder="Search templates by name or description..." />
+    <div class="filters" id="filters"></div>
+    <div class="grid" id="grid"></div>
+    <div class="empty-state" id="empty-state" style="display:none;">No templates found. Save a generated end card as a template to get started.</div>
+  </div>
+
+  <!-- Detail modal -->
+  <div class="detail-overlay" id="detail-overlay">
+    <div class="detail-modal">
+      <button class="modal-close" id="detail-close">&times;</button>
+      <img class="detail-preview" id="detail-preview" alt="" style="display:none;" />
+      <div class="detail-name" id="detail-name"></div>
+      <div class="detail-meta">
+        <span class="tpl-card-badge" id="detail-category"></span>
+        <span class="tpl-card-info" id="detail-var-count"></span>
+      </div>
+      <div class="detail-desc" id="detail-desc"></div>
+
+      <div class="detail-section-label">Variables</div>
+      <div id="detail-vars"></div>
+
+      <div class="detail-section-label" style="margin-top:18px;">Design Overrides <span style="font-size:9px;color:rgba(255,255,255,0.2);text-transform:none;letter-spacing:0;">(optional)</span></div>
+      <div id="detail-design-fields"></div>
+
+      <div class="detail-actions">
+        <button class="btn-render-single" id="btn-render-single">Render End Card</button>
+        <button class="btn-bulk-open" id="btn-bulk-open">Bulk Generate</button>
+      </div>
+
+      <div class="detail-render-progress" id="detail-render-progress">
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);">Rendering...</div>
+        <div class="detail-render-log" id="detail-render-log"></div>
+      </div>
+      <div class="detail-download" id="detail-download">
+        <a id="detail-download-link" href="#" target="_blank">Download rendered video</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk modal -->
+  <div class="bulk-overlay" id="bulk-overlay">
+    <div class="bulk-modal">
+      <button class="modal-close" id="bulk-close">&times;</button>
+      <div class="modal-title">Bulk Generate End Cards</div>
+      <div class="modal-sub" id="bulk-template-label"></div>
+
+      <div class="bulk-upload-zone" id="bulk-upload-zone">
+        <input type="file" id="bulk-file-input" accept=".csv,.json" />
+        <div class="bulk-upload-label">Drop a CSV or JSON file here, or click to browse</div>
+      </div>
+
+      <div class="bulk-format-help">
+        <strong>CSV format:</strong> Columns should match variable names. For locations use <code>CITY|ADDRESS;CITY|ADDRESS</code><br>
+        <strong>JSON format:</strong> Array of objects with variable names as keys.<br>
+        <strong>Locations in table:</strong> Type as <code>City | Address ; City2 | Address2</code> or click a location cell to open the structured editor.
+      </div>
+
+      <div class="bulk-table-wrap">
+        <table class="bulk-table" id="bulk-table">
+          <thead id="bulk-thead"></thead>
+          <tbody id="bulk-tbody"></tbody>
+        </table>
+      </div>
+
+      <button class="bulk-add-row" id="bulk-add-row">+ Add row</button>
+
+      <div class="detail-section-label" style="margin-top:18px;">Design Overrides <span style="font-size:9px;color:rgba(255,255,255,0.2);text-transform:none;letter-spacing:0;">(applies to all rows)</span></div>
+      <div id="bulk-design-fields"></div>
+
+      <div class="bulk-actions">
+        <button class="btn-bulk-generate" id="btn-bulk-generate" disabled>Generate All</button>
+        <button class="btn-bulk-cancel-action" id="btn-bulk-cancel">Cancel</button>
+        <button class="modal-btn-cancel" id="bulk-modal-close">Close</button>
+      </div>
+
+      <div class="bulk-progress" id="bulk-progress" style="display:none;"></div>
+    </div>
+  </div>
+
+  <script>
+    let allTemplates = [];
+    let activeFilter = 'all';
+    let searchQuery = '';
+    let currentDetailTemplate = null;
+    let currentBulkTemplate = null;
+    let bulkRows = [];
+    let bulkVarDefs = [];
+    let cachedAssets = null;
+
+    // ── Load & render ────────────────────────────────────────────
+    async function loadTemplates() {
+      try {
+        const {templates, categories} = await fetch('/api/templates').then(r => r.json());
+        allTemplates = templates;
+        renderFilters(categories || []);
+        applyFilters();
+      } catch (e) { console.error('Failed to load templates:', e); }
+    }
+
+    function renderFilters(categories) {
+      const container = document.getElementById('filters');
+      container.innerHTML = '';
+      const pills = [{value: 'all', label: 'All'}, ...categories.map(c => ({value: c, label: c}))];
+      for (const p of pills) {
+        const btn = document.createElement('button');
+        btn.className = 'filter-pill' + (activeFilter === p.value ? ' active' : '');
+        btn.textContent = p.label;
+        btn.addEventListener('click', () => {
+          activeFilter = p.value;
+          container.querySelectorAll('.filter-pill').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase() === p.value));
+          applyFilters();
+        });
+        container.appendChild(btn);
+      }
+    }
+
+    function applyFilters() {
+      let filtered = allTemplates;
+      if (activeFilter !== 'all') filtered = filtered.filter(t => t.category === activeFilter);
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        filtered = filtered.filter(t =>
+          (t.displayName || t.name).toLowerCase().includes(q) ||
+          (t.description || '').toLowerCase().includes(q)
+        );
+      }
+      renderGrid(filtered);
+    }
+
+    function renderGrid(templates) {
+      const grid = document.getElementById('grid');
+      const empty = document.getElementById('empty-state');
+      const sub = document.getElementById('page-sub');
+      grid.innerHTML = '';
+
+      if (templates.length === 0) {
+        empty.style.display = 'block';
+        sub.textContent = `${allTemplates.length} template(s) total`;
+        return;
+      }
+      empty.style.display = 'none';
+      sub.textContent = `Showing ${templates.length} of ${allTemplates.length} template(s)`;
+
+      for (const tpl of templates) {
+        const dateStr = tpl.createdAt ? new Date(tpl.createdAt).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'}) : '';
+        const card = document.createElement('div');
+        card.className = 'tpl-card';
+        card.innerHTML = `
+          ${tpl.previewUrl
+            ? `<img class="tpl-card-thumb" src="${tpl.previewUrl}" alt="${tpl.displayName}" loading="lazy" />`
+            : `<div class="tpl-card-no-thumb">&#x1F3AC;</div>`}
+          <div class="tpl-card-body">
+            <div class="tpl-card-name">${tpl.displayName || tpl.name}</div>
+            <div class="tpl-card-desc">${tpl.description || 'No description'}</div>
+            <div class="tpl-card-footer">
+              <span class="tpl-card-badge">${tpl.category || 'other'}</span>
+              <span class="tpl-card-info">${tpl.variableCount} var${tpl.variableCount !== 1 ? 's' : ''} &middot; ${dateStr}</span>
+            </div>
+          </div>`;
+        card.addEventListener('click', () => openTemplateDetail(tpl.name));
+        grid.appendChild(card);
+      }
+    }
+
+    // ── Search ───────────────────────────────────────────────────
+    document.getElementById('search-bar').addEventListener('input', (e) => {
+      searchQuery = e.target.value.trim();
+      applyFilters();
+    });
+
+    // ── Detail modal ─────────────────────────────────────────────
+    const detailOverlay = document.getElementById('detail-overlay');
+    document.getElementById('detail-close').addEventListener('click', () => detailOverlay.classList.remove('visible'));
+    detailOverlay.addEventListener('click', (e) => { if (e.target === detailOverlay) detailOverlay.classList.remove('visible'); });
+
+    async function openTemplateDetail(name) {
+      try {
+        const tpl = await fetch(`/api/templates/${name}`).then(r => r.json());
+        if (tpl.error) throw new Error(tpl.error);
+        currentDetailTemplate = tpl;
+
+        const preview = document.getElementById('detail-preview');
+        if (tpl.previewUrl) { preview.src = tpl.previewUrl; preview.style.display = 'block'; }
+        else preview.style.display = 'none';
+
+        document.getElementById('detail-name').textContent = tpl.displayName || tpl.name;
+        document.getElementById('detail-category').textContent = tpl.category || 'other';
+        document.getElementById('detail-var-count').textContent = `${(tpl.variables || []).length} variables`;
+        document.getElementById('detail-desc').textContent = tpl.description || 'No description provided.';
+
+        renderDetailVars(tpl.variables || []);
+        renderDetailDesignFields(tpl.designFields || []);
+        document.getElementById('detail-render-progress').classList.remove('visible');
+        document.getElementById('detail-download').classList.remove('visible');
+        document.getElementById('detail-render-log').textContent = '';
+        document.getElementById('btn-render-single').disabled = false;
+        document.getElementById('btn-render-single').textContent = 'Render End Card';
+
+        detailOverlay.classList.add('visible');
+      } catch (e) {
+        alert('Error loading template: ' + e.message);
+      }
+    }
+
+    function renderDetailVars(variables) {
+      const container = document.getElementById('detail-vars');
+      container.innerHTML = '';
+      for (const v of variables) {
+        const row = document.createElement('div');
+        row.className = 'var-row';
+
+        if (v.type === 'locations') {
+          row.innerHTML = `
+            <div class="var-label"><span class="var-tag">{{${v.name || v.id}}}</span><span>${v.label}</span></div>
+            <div class="loc-group" data-var-name="${v.name || v.id.replace('prop:', '')}"></div>
+            <button class="loc-btn" style="margin-top:6px;" data-add-loc>+</button>`;
+          container.appendChild(row);
+          const locGroup = row.querySelector('.loc-group');
+          const locs = Array.isArray(v.defaultValue) ? v.defaultValue : [{city: '', address: ''}];
+          for (const loc of locs) addLocationRow(locGroup, loc.city, loc.address);
+          row.querySelector('[data-add-loc]').addEventListener('click', () => addLocationRow(locGroup, '', ''));
+        } else {
+          row.innerHTML = `
+            <div class="var-label"><span class="var-tag">{{${v.name || v.id}}}</span><span>${v.label}</span></div>
+            <textarea class="var-input" data-var-name="${v.name || v.id.replace('prop:', '')}" rows="1" placeholder="${escapeAttr(v.placeholder || '')}">${escapeAttr(typeof v.defaultValue === 'string' ? v.defaultValue : '')}</textarea>`;
+          container.appendChild(row);
+          // Auto-grow textarea on input
+          const ta = row.querySelector('textarea');
+          ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; });
+        }
+      }
+    }
+
+    function addLocationRow(group, city, address) {
+      const row = document.createElement('div');
+      row.className = 'loc-row';
+      row.innerHTML = `
+        <input class="var-input" data-loc-field="city" value="${escapeAttr(city)}" placeholder="City" />
+        <input class="var-input" data-loc-field="address" value="${escapeAttr(address)}" placeholder="Address" />
+        <button class="loc-btn" data-remove-loc>&times;</button>`;
+      row.querySelector('[data-remove-loc]').addEventListener('click', () => { if (group.children.length > 1) row.remove(); });
+      group.appendChild(row);
+    }
+
+    function escapeAttr(s) { return s.replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+
+    // ── Design overrides ─────────────────────────────────────────
+    async function getAssets() {
+      if (cachedAssets) return cachedAssets;
+      try { cachedAssets = await fetch('/api/assets').then(r => r.json()); } catch { cachedAssets = {logos: [], bgImages: [], fonts: []}; }
+      return cachedAssets;
+    }
+
+    async function renderDetailDesignFields(designFields) { return renderDesignFieldsInto('detail-design-fields', designFields); }
+
+    /**
+     * Create a custom dropdown with thumbnail previews.
+     * @param {Object} opts - { items: [{value, label, thumbUrl?}], defaultValue, dataField, placeholder, thumbClass, isVideo }
+     * @returns {HTMLElement} the dropdown container element
+     */
+    function createPreviewDropdown(opts) {
+      const { items, defaultValue, dataField, placeholder, thumbClass, isVideo } = opts;
+      const wrap = document.createElement('div');
+      wrap.className = 'preview-dropdown';
+      wrap.dataset.designField = dataField;
+
+      const selectedItem = items.find(i => i.value === defaultValue);
+      const thumbCls = thumbClass || (isVideo ? 'preview-selected-vid' : 'preview-selected-thumb');
+      const itemThumbCls = isVideo ? 'preview-item-vid' : 'preview-item-thumb';
+
+      // Selected display
+      const sel = document.createElement('div');
+      sel.className = 'preview-selected';
+      sel.innerHTML = `
+        <span class="preview-selected-text">${placeholder || 'Select...'}</span>
+        <span class="preview-selected-arrow">&#x25BC;</span>`;
+      wrap.appendChild(sel);
+
+      // Dropdown list
+      const list = document.createElement('div');
+      list.className = 'preview-list';
+
+      // Default/none option
+      const noneItem = document.createElement('div');
+      noneItem.className = 'preview-item' + (!defaultValue ? ' selected' : '');
+      noneItem.dataset.value = '';
+      noneItem.innerHTML = `<span class="preview-item-name">${placeholder || '— Default —'}</span>`;
+      list.appendChild(noneItem);
+
+      for (const item of items) {
+        const el = document.createElement('div');
+        el.className = 'preview-item' + (item.value === defaultValue ? ' selected' : '');
+        el.dataset.value = item.value;
+        if (item.thumbUrl) {
+          if (isVideo) {
+            el.innerHTML = `<video class="${itemThumbCls}" src="${item.thumbUrl}" muted preload="metadata"></video><span class="preview-item-name">${item.label}</span>`;
+            // Show a frame on hover
+            const vid = el.querySelector('video');
+            el.addEventListener('mouseenter', () => { vid.currentTime = 0.5; });
+          } else {
+            el.innerHTML = `<img class="${itemThumbCls}" src="${item.thumbUrl}" alt="${item.label}" loading="lazy" /><span class="preview-item-name">${item.label}</span>`;
+          }
+        } else {
+          el.innerHTML = `<span class="preview-item-name">${item.label}</span>`;
+        }
+        list.appendChild(el);
+      }
+      wrap.appendChild(list);
+
+      // Current value
+      wrap._value = '';
+
+      function selectValue(val) {
+        wrap._value = val;
+        const found = items.find(i => i.value === val);
+        list.querySelectorAll('.preview-item').forEach(i => i.classList.toggle('selected', i.dataset.value === val));
+        if (found && found.thumbUrl) {
+          if (isVideo) {
+            sel.innerHTML = `<video class="${thumbCls}" src="${found.thumbUrl}" muted preload="metadata"></video><span class="preview-selected-text">${found.label}</span><span class="preview-selected-arrow">&#x25BC;</span>`;
+          } else {
+            sel.innerHTML = `<img class="${thumbCls}" src="${found.thumbUrl}" alt="${found.label}" /><span class="preview-selected-text">${found.label}</span><span class="preview-selected-arrow">&#x25BC;</span>`;
+          }
+        } else {
+          sel.innerHTML = `<span class="preview-selected-text">${val ? val : (placeholder || '— Default —')}</span><span class="preview-selected-arrow">&#x25BC;</span>`;
+        }
+      }
+
+      // Toggle open
+      sel.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = list.classList.contains('open');
+        // Close any other open dropdowns
+        document.querySelectorAll('.preview-list.open').forEach(l => { l.classList.remove('open'); l.parentElement.querySelector('.preview-selected').classList.remove('open'); });
+        if (!isOpen) { list.classList.add('open'); sel.classList.add('open'); }
+      });
+
+      // Item click
+      list.addEventListener('click', (e) => {
+        const item = e.target.closest('.preview-item');
+        if (!item) return;
+        selectValue(item.dataset.value);
+        list.classList.remove('open');
+        sel.classList.remove('open');
+      });
+
+      // Close on outside click
+      document.addEventListener('click', () => { list.classList.remove('open'); sel.classList.remove('open'); });
+
+      return wrap;
+    }
+
+    async function renderDesignFieldsInto(containerId, designFields) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      if (!designFields || designFields.length === 0) { container.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,0.15);">No design fields</div>'; return; }
+
+      const assets = await getAssets();
+
+      for (const f of designFields) {
+        const row = document.createElement('div');
+        row.className = 'var-row';
+
+        if (f.id === 'background') {
+          const bgImgOptions = (assets.bgImages || []).map(b => `<option value="${b}">${b}</option>`).join('');
+          const bgVidOptions = (assets.bgVideos || []).map(b => `<option value="${b}">${b}</option>`).join('');
+          row.innerHTML = `
+            <div class="var-label"><span>${f.label}</span></div>
+            <div class="bg-type-tabs">
+              <button class="bg-type-tab active" data-bg-type="solid">Solid Color</button>
+              <button class="bg-type-tab" data-bg-type="image">Image</button>
+              <button class="bg-type-tab" data-bg-type="video">Video</button>
+              <button class="bg-type-tab" data-bg-type="transparent">Transparent</button>
+            </div>
+            <div class="bg-type-panel visible" data-bg-panel="solid">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <input type="color" data-design-field="background-color" value="${f.defaultValue || '#000000'}" style="width:40px;height:32px;border:none;background:none;cursor:pointer;" />
+                <span style="font-size:11px;color:rgba(255,255,255,0.3);" class="design-bg-label">${f.defaultValue || ''}</span>
+              </div>
+            </div>
+            <div class="bg-type-panel" data-bg-panel="image">
+              <div class="bg-image-dropdown-slot"></div>
+              <label class="bg-upload-btn">Upload new image<input type="file" accept=".png,.jpg,.jpeg,.webp" data-bg-upload="image" /></label>
+            </div>
+            <div class="bg-type-panel" data-bg-panel="video">
+              <div class="bg-video-dropdown-slot"></div>
+              <label class="bg-upload-btn">Upload video file<input type="file" accept=".mp4,.mov,.webm" data-bg-upload="video" /></label>
+            </div>
+            <div class="bg-type-panel" data-bg-panel="transparent">
+              <div style="font-size:11px;color:rgba(255,255,255,0.3);padding:8px 0;">Background will be fully transparent (output as WebM with alpha channel)</div>
+            </div>`;
+          container.appendChild(row);
+
+          // Tab switching
+          row.querySelectorAll('.bg-type-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+              row.querySelectorAll('.bg-type-tab').forEach(t => t.classList.remove('active'));
+              row.querySelectorAll('.bg-type-panel').forEach(p => p.classList.remove('visible'));
+              tab.classList.add('active');
+              row.querySelector(`[data-bg-panel="${tab.dataset.bgType}"]`).classList.add('visible');
+            });
+          });
+
+          // Color picker label sync
+          const colorInput = row.querySelector('[data-design-field="background-color"]');
+          const label = row.querySelector('.design-bg-label');
+          colorInput.addEventListener('input', () => { label.textContent = colorInput.value; });
+
+          // Background image preview dropdown
+          const bgImgSlot = row.querySelector('.bg-image-dropdown-slot');
+          const bgImgDropdown = createPreviewDropdown({
+            items: (assets.bgImages || []).map(b => ({ value: b, label: b, thumbUrl: `/public/${b}` })),
+            defaultValue: '', dataField: 'background-image',
+            placeholder: '— Select background image —',
+          });
+          bgImgSlot.appendChild(bgImgDropdown);
+
+          // Background video preview dropdown
+          const bgVidSlot = row.querySelector('.bg-video-dropdown-slot');
+          const bgVidDropdown = createPreviewDropdown({
+            items: (assets.bgVideos || []).map(b => ({ value: b, label: b, thumbUrl: `/public/${b}` })),
+            defaultValue: '', dataField: 'background-video',
+            placeholder: '— Select background video —', isVideo: true,
+          });
+          bgVidSlot.appendChild(bgVidDropdown);
+
+          // File uploads — add to preview dropdown after upload
+          row.querySelectorAll('[data-bg-upload]').forEach(fileInput => {
+            fileInput.addEventListener('change', async () => {
+              if (!fileInput.files[0]) return;
+              const formData = new FormData();
+              formData.append('file', fileInput.files[0]);
+              try {
+                const resp = await fetch('/api/upload-bg', {method: 'POST', body: formData});
+                const result = await resp.json();
+                if (result.error) { alert(result.error); return; }
+                const type = fileInput.dataset.bgUpload;
+                const dropdown = row.querySelector(`[data-design-field="background-${type}"]`);
+                if (dropdown && dropdown._value !== undefined) {
+                  // Dynamically select the uploaded file
+                  dropdown._value = result.filename;
+                  const sel = dropdown.querySelector('.preview-selected');
+                  const isVid = type === 'video';
+                  const thumbCls = isVid ? 'preview-selected-vid' : 'preview-selected-thumb';
+                  if (isVid) {
+                    sel.innerHTML = `<video class="${thumbCls}" src="/public/${result.filename}" muted preload="metadata"></video><span class="preview-selected-text">${result.filename}</span><span class="preview-selected-arrow">&#x25BC;</span>`;
+                  } else {
+                    sel.innerHTML = `<img class="${thumbCls}" src="/public/${result.filename}" alt="${result.filename}" /><span class="preview-selected-text">${result.filename}</span><span class="preview-selected-arrow">&#x25BC;</span>`;
+                  }
+                }
+                fileInput.parentElement.textContent = 'Uploaded: ' + result.filename;
+              } catch (e) { alert('Upload failed: ' + e.message); }
+            });
+          });
+        } else if (f.id === 'logo') {
+          row.innerHTML = `<div class="var-label"><span>${f.label}</span></div>`;
+          const logoDropdown = createPreviewDropdown({
+            items: assets.logos.map(l => ({ value: l, label: l, thumbUrl: `/public/${l}` })),
+            defaultValue: '', dataField: 'logo',
+            placeholder: `— Default (${f.defaultValue || 'none'}) —`,
+          });
+          row.appendChild(logoDropdown);
+          container.appendChild(row);
+        } else if (f.id === 'fontFamily') {
+          const fontOptions = assets.fonts.map(fn => `<option value="${fn}" ${fn === f.defaultValue ? 'selected' : ''}>${fn}</option>`).join('');
+          row.innerHTML = `
+            <div class="var-label"><span>${f.label}</span></div>
+            <select class="var-input" data-design-field="fontFamily" style="cursor:pointer;">
+              <option value="">— Default (${f.defaultValue || 'none'}) —</option>
+              ${fontOptions}
+            </select>`;
+          container.appendChild(row);
+        }
+      }
+    }
+
+    function collectDetailVarValues() {
+      const values = {};
+      const container = document.getElementById('detail-vars');
+      container.querySelectorAll('.var-input[data-var-name]').forEach(inp => { values[inp.dataset.varName] = inp.value; });
+      container.querySelectorAll('.loc-group[data-var-name]').forEach(group => {
+        const locs = [];
+        group.querySelectorAll('.loc-row').forEach(row => {
+          const city = row.querySelector('[data-loc-field="city"]').value.trim();
+          const address = row.querySelector('[data-loc-field="address"]').value.trim();
+          if (city || address) locs.push({city, address});
+        });
+        values[group.dataset.varName] = locs;
+      });
+      return values;
+    }
+
+    function collectDesignOverrides() { return collectDesignOverridesFrom('detail-design-fields'); }
+
+    function collectDesignOverridesFrom(containerId) {
+      const overrides = {};
+      const container = document.getElementById(containerId);
+
+      // Background — determine active type
+      const activeTab = container.querySelector('.bg-type-tab.active');
+      if (activeTab) {
+        const bgType = activeTab.dataset.bgType;
+        overrides.backgroundType = bgType;
+        if (bgType === 'solid') {
+          const colorInput = container.querySelector('[data-design-field="background-color"]');
+          if (colorInput) overrides.background = colorInput.value;
+        } else if (bgType === 'image') {
+          const imgDropdown = container.querySelector('[data-design-field="background-image"]');
+          const imgVal = imgDropdown ? (imgDropdown._value || imgDropdown.value) : '';
+          if (imgVal) overrides.background = imgVal;
+        } else if (bgType === 'video') {
+          const vidDropdown = container.querySelector('[data-design-field="background-video"]');
+          const vidVal = vidDropdown ? (vidDropdown._value || vidDropdown.value) : '';
+          if (vidVal) overrides.background = vidVal;
+        } else if (bgType === 'transparent') {
+          overrides.background = 'transparent';
+        }
+      }
+
+      const logoDropdown = container.querySelector('[data-design-field="logo"]');
+      const logoVal = logoDropdown ? (logoDropdown._value || logoDropdown.value) : '';
+      if (logoVal) overrides.logo = logoVal;
+      const fontSelect = container.querySelector('[data-design-field="fontFamily"]');
+      if (fontSelect && fontSelect.value) overrides.fontFamily = fontSelect.value;
+      return overrides;
+    }
+
+    // ── Single render ────────────────────────────────────────────
+    document.getElementById('btn-render-single').addEventListener('click', async () => {
+      if (!currentDetailTemplate) return;
+      const btn = document.getElementById('btn-render-single');
+      btn.disabled = true;
+      btn.textContent = 'Rendering...';
+
+      const progressDiv = document.getElementById('detail-render-progress');
+      const logDiv = document.getElementById('detail-render-log');
+      const downloadDiv = document.getElementById('detail-download');
+      progressDiv.classList.add('visible');
+      downloadDiv.classList.remove('visible');
+      logDiv.textContent = '';
+
+      try {
+        const resp = await fetch('/api/render-from-template', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            templateName: currentDetailTemplate.name,
+            variables: collectDetailVarValues(),
+            designOverrides: collectDesignOverrides(),
+          }),
+        });
+
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        while (true) {
+          const {done, value} = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, {stream: true});
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            let msg;
+            try { msg = JSON.parse(line.slice(6)); } catch { continue; }
+            if (msg.type === 'log') { logDiv.textContent += msg.text + '\n'; logDiv.scrollTop = logDiv.scrollHeight; }
+            else if (msg.type === 'done') {
+              downloadDiv.classList.add('visible');
+              const link = document.getElementById('detail-download-link');
+              link.href = msg.downloadUrl;
+              link.textContent = `Download ${msg.file}`;
+              btn.textContent = 'Render Complete';
+            } else if (msg.type === 'error') {
+              logDiv.textContent += 'ERROR: ' + msg.message + '\n';
+              btn.textContent = 'Render Failed';
+            }
+          }
+        }
+      } catch (e) {
+        document.getElementById('detail-render-log').textContent += 'Error: ' + e.message + '\n';
+        btn.textContent = 'Render Failed';
+      }
+      btn.disabled = false;
+    });
+
+    // ── Bulk generation ──────────────────────────────────────────
+    const bulkOverlay = document.getElementById('bulk-overlay');
+
+    document.getElementById('btn-bulk-open').addEventListener('click', () => {
+      if (!currentDetailTemplate) return;
+      currentBulkTemplate = currentDetailTemplate.name;
+      bulkVarDefs = (currentDetailTemplate.variables || []).filter(v => v.customizable !== false);
+      document.getElementById('bulk-template-label').textContent = `Template: ${currentDetailTemplate.displayName || currentDetailTemplate.name}`;
+      bulkRows = [collectDetailVarValues()];
+      renderBulkTable();
+      renderDesignFieldsInto('bulk-design-fields', currentDetailTemplate.designFields || []);
+      document.getElementById('bulk-progress').style.display = 'none';
+      document.getElementById('bulk-progress').innerHTML = '';
+      document.getElementById('btn-bulk-generate').disabled = false;
+      document.getElementById('btn-bulk-generate').textContent = `Generate All (${bulkRows.length})`;
+      document.getElementById('btn-bulk-cancel').style.display = 'none';
+      bulkOverlay.classList.add('visible');
+    });
+
+    document.getElementById('bulk-close').addEventListener('click', () => bulkOverlay.classList.remove('visible'));
+    document.getElementById('bulk-modal-close').addEventListener('click', () => bulkOverlay.classList.remove('visible'));
+    bulkOverlay.addEventListener('click', (e) => { if (e.target === bulkOverlay) bulkOverlay.classList.remove('visible'); });
+
+    const bulkUploadZone = document.getElementById('bulk-upload-zone');
+    const bulkFileInput = document.getElementById('bulk-file-input');
+    bulkUploadZone.addEventListener('click', () => bulkFileInput.click());
+    bulkUploadZone.addEventListener('dragover', (e) => { e.preventDefault(); bulkUploadZone.style.borderColor = 'rgba(255,255,255,0.4)'; });
+    bulkUploadZone.addEventListener('dragleave', () => { bulkUploadZone.style.borderColor = ''; });
+    bulkUploadZone.addEventListener('drop', (e) => { e.preventDefault(); bulkUploadZone.style.borderColor = ''; handleBulkFile(e.dataTransfer.files[0]); });
+    bulkFileInput.addEventListener('change', () => { if (bulkFileInput.files[0]) handleBulkFile(bulkFileInput.files[0]); });
+
+    function handleBulkFile(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const text = reader.result;
+        if (file.name.endsWith('.json')) {
+          try { const data = JSON.parse(text); bulkRows = Array.isArray(data) ? data : [data]; }
+          catch (e) { alert('Invalid JSON: ' + e.message); return; }
+        } else {
+          bulkRows = parseCsv(text);
+        }
+        renderBulkTable();
+        document.getElementById('btn-bulk-generate').textContent = `Generate All (${bulkRows.length})`;
+        document.getElementById('btn-bulk-generate').disabled = bulkRows.length === 0;
+      };
+      reader.readAsText(file);
+    }
+
+    function parseCsv(text) {
+      const lines = text.trim().split('\n');
+      if (lines.length < 2) return [];
+      const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+      const rows = [];
+      for (let i = 1; i < lines.length; i++) {
+        const vals = csvSplitRow(lines[i]);
+        const row = {};
+        for (let j = 0; j < headers.length; j++) {
+          const key = headers[j];
+          const val = (vals[j] || '').trim();
+          if (key === 'locations') {
+            row[key] = val.split(';').filter(Boolean).map(entry => {
+              const [city, address] = entry.split('|');
+              return {city: (city || '').trim(), address: (address || '').trim()};
+            });
+          } else { row[key] = val; }
+        }
+        rows.push(row);
+      }
+      return rows;
+    }
+
+    function csvSplitRow(line) {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+      for (const ch of line) {
+        if (ch === '"') { inQuotes = !inQuotes; }
+        else if (ch === ',' && !inQuotes) { result.push(current); current = ''; }
+        else { current += ch; }
+      }
+      result.push(current);
+      return result;
+    }
+
+    // Convert location array to pipe-delimited display string
+    function locsToDisplay(locs) {
+      if (!Array.isArray(locs)) return '';
+      return locs.map(l => `${l.city || ''} | ${l.address || ''}`).join(' ; ');
+    }
+
+    // Parse pipe-delimited string back to location array
+    function displayToLocs(str) {
+      return str.split(';').map(s => s.trim()).filter(Boolean).map(entry => {
+        const [city, ...rest] = entry.split('|');
+        return { city: (city || '').trim(), address: rest.join('|').trim() };
+      });
+    }
+
+    function renderBulkTable() {
+      const thead = document.getElementById('bulk-thead');
+      const tbody = document.getElementById('bulk-tbody');
+      const varNames = bulkVarDefs.map(v => v.name || v.id.replace('prop:', ''));
+      thead.innerHTML = '<tr><th>#</th>' + varNames.map(n => `<th>${n}</th>`).join('') + '<th></th></tr>';
+      tbody.innerHTML = '';
+      for (let i = 0; i < bulkRows.length; i++) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td class="row-num">${i + 1}</td>`;
+        for (const name of varNames) {
+          const td = document.createElement('td');
+          const val = bulkRows[i][name];
+          const def = bulkVarDefs.find(v => (v.name || v.id.replace('prop:', '')) === name);
+
+          if (def && def.type === 'locations' && Array.isArray(val)) {
+            const display = locsToDisplay(val);
+            td.style.position = 'relative';
+            td.innerHTML = `<input value="${escapeAttr(display)}" data-row="${i}" data-var="${name}" data-loc-edit title="Click to edit locations" />`;
+          } else {
+            const displayVal = typeof val === 'object' ? JSON.stringify(val) : (val || '');
+            td.innerHTML = `<input value="${escapeAttr(displayVal)}" data-row="${i}" data-var="${name}" />`;
+          }
+          tr.appendChild(td);
+        }
+        const delTd = document.createElement('td');
+        delTd.innerHTML = `<button class="row-del" data-del-row="${i}">&times;</button>`;
+        tr.appendChild(delTd);
+        tbody.appendChild(tr);
+      }
+
+      // Wire up regular input changes
+      tbody.querySelectorAll('input:not([data-loc-edit])').forEach(inp => {
+        inp.addEventListener('change', () => {
+          bulkRows[parseInt(inp.dataset.row)][inp.dataset.var] = inp.value;
+        });
+      });
+
+      // Wire up location inputs — parse pipe format on blur, open popover on click
+      tbody.querySelectorAll('input[data-loc-edit]').forEach(inp => {
+        inp.addEventListener('blur', () => {
+          const r = parseInt(inp.dataset.row);
+          bulkRows[r][inp.dataset.var] = displayToLocs(inp.value);
+        });
+        inp.addEventListener('click', (e) => {
+          const r = parseInt(inp.dataset.row);
+          const name = inp.dataset.var;
+          openLocPopover(inp, r, name);
+        });
+      });
+
+      tbody.querySelectorAll('.row-del').forEach(btn => {
+        btn.addEventListener('click', () => {
+          bulkRows.splice(parseInt(btn.dataset.delRow), 1);
+          renderBulkTable();
+          document.getElementById('btn-bulk-generate').textContent = `Generate All (${bulkRows.length})`;
+          document.getElementById('btn-bulk-generate').disabled = bulkRows.length === 0;
+        });
+      });
+    }
+
+    // ── Location popover editor ──────────────────────────────────
+    let activePopover = null;
+
+    function closeLocPopover() {
+      if (activePopover) { activePopover.remove(); activePopover = null; }
+    }
+
+    function openLocPopover(inputEl, rowIdx, varName) {
+      closeLocPopover();
+      const locs = bulkRows[rowIdx][varName] || [{city: '', address: ''}];
+
+      const popover = document.createElement('div');
+      popover.className = 'loc-popover';
+      popover.innerHTML = `<div class="loc-popover-title">Edit Locations (Row ${rowIdx + 1})</div>`;
+
+      const rowsContainer = document.createElement('div');
+      for (const loc of locs) {
+        addPopoverRow(rowsContainer, loc.city, loc.address);
+      }
+      popover.appendChild(rowsContainer);
+
+      const actions = document.createElement('div');
+      actions.className = 'loc-popover-actions';
+      actions.innerHTML = `<button class="loc-popover-add">+ Add</button><button class="loc-popover-apply">Apply</button>`;
+      popover.appendChild(actions);
+
+      actions.querySelector('.loc-popover-add').addEventListener('click', () => {
+        addPopoverRow(rowsContainer, '', '');
+      });
+
+      actions.querySelector('.loc-popover-apply').addEventListener('click', () => {
+        const newLocs = [];
+        rowsContainer.querySelectorAll('.loc-popover-row').forEach(row => {
+          const city = row.querySelector('[data-field="city"]').value.trim();
+          const address = row.querySelector('[data-field="address"]').value.trim();
+          if (city || address) newLocs.push({city, address});
+        });
+        bulkRows[rowIdx][varName] = newLocs.length ? newLocs : [{city: '', address: ''}];
+        inputEl.value = locsToDisplay(bulkRows[rowIdx][varName]);
+        closeLocPopover();
+      });
+
+      // Position near the input
+      document.body.appendChild(popover);
+      const rect = inputEl.getBoundingClientRect();
+      popover.style.top = (rect.bottom + 4) + 'px';
+      popover.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 360)) + 'px';
+      activePopover = popover;
+
+      // Close on outside click
+      setTimeout(() => {
+        document.addEventListener('mousedown', function handler(e) {
+          if (!popover.contains(e.target) && e.target !== inputEl) {
+            closeLocPopover();
+            document.removeEventListener('mousedown', handler);
+          }
+        });
+      }, 0);
+    }
+
+    function addPopoverRow(container, city, address) {
+      const row = document.createElement('div');
+      row.className = 'loc-popover-row';
+      row.innerHTML = `
+        <input data-field="city" value="${escapeAttr(city)}" placeholder="City" style="flex:0.8;" />
+        <input data-field="address" value="${escapeAttr(address)}" placeholder="Address" />
+        <button class="loc-popover-del">&times;</button>`;
+      row.querySelector('.loc-popover-del').addEventListener('click', () => {
+        if (container.children.length > 1) row.remove();
+      });
+      container.appendChild(row);
+    }
+
+    document.getElementById('bulk-add-row').addEventListener('click', () => {
+      const defaultRow = {};
+      for (const v of bulkVarDefs) {
+        const name = v.name || v.id.replace('prop:', '');
+        defaultRow[name] = v.defaultValue !== undefined ? v.defaultValue : '';
+      }
+      bulkRows.push(defaultRow);
+      renderBulkTable();
+      document.getElementById('btn-bulk-generate').textContent = `Generate All (${bulkRows.length})`;
+      document.getElementById('btn-bulk-generate').disabled = false;
+    });
+
+    document.getElementById('btn-bulk-generate').addEventListener('click', async () => {
+      if (!currentBulkTemplate || bulkRows.length === 0) return;
+      // Read latest values from table inputs
+      document.getElementById('bulk-tbody').querySelectorAll('input').forEach(inp => {
+        const r = parseInt(inp.dataset.row);
+        const name = inp.dataset.var;
+        if (inp.dataset.locEdit !== undefined) {
+          // Location field — parse pipe format
+          bulkRows[r][name] = displayToLocs(inp.value);
+        } else {
+          bulkRows[r][name] = inp.value;
+        }
+      });
+
+      const btn = document.getElementById('btn-bulk-generate');
+      const cancelBtn = document.getElementById('btn-bulk-cancel');
+      btn.disabled = true;
+      btn.textContent = 'Generating...';
+      cancelBtn.style.display = 'inline';
+
+      const progressDiv = document.getElementById('bulk-progress');
+      progressDiv.style.display = 'block';
+      progressDiv.innerHTML = '';
+      for (let i = 0; i < bulkRows.length; i++) {
+        const item = document.createElement('div');
+        item.className = 'bulk-progress-item';
+        item.id = `bulk-item-${i}`;
+        item.innerHTML = `<div class="status-dot pending"></div><span class="item-label">Row ${i + 1}</span>`;
+        progressDiv.appendChild(item);
+      }
+
+      try {
+        const resp = await fetch('/api/bulk-render', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({templateName: currentBulkTemplate, rows: bulkRows, designOverrides: collectDesignOverridesFrom('bulk-design-fields')}),
+        });
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        while (true) {
+          const {done, value} = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, {stream: true});
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            let msg;
+            try { msg = JSON.parse(line.slice(6)); } catch { continue; }
+            if (msg.type === 'row-start') {
+              const item = document.getElementById(`bulk-item-${msg.index}`);
+              if (item) { item.querySelector('.status-dot').className = 'status-dot active'; item.querySelector('.item-label').textContent = `Row ${msg.index + 1} — rendering...`; }
+            } else if (msg.type === 'row-done') {
+              const item = document.getElementById(`bulk-item-${msg.index}`);
+              if (item) {
+                item.querySelector('.status-dot').className = 'status-dot done';
+                item.querySelector('.item-label').textContent = `Row ${msg.index + 1} — done`;
+                const a = document.createElement('a'); a.href = msg.downloadUrl; a.target = '_blank'; a.textContent = 'Download';
+                item.appendChild(a);
+              }
+            } else if (msg.type === 'row-error') {
+              const item = document.getElementById(`bulk-item-${msg.index}`);
+              if (item) { item.querySelector('.status-dot').className = 'status-dot error'; item.querySelector('.item-label').textContent = `Row ${msg.index + 1} — failed: ${msg.error}`; }
+            } else if (msg.type === 'bulk-done') { btn.textContent = `Done (${msg.successCount}/${msg.successCount + msg.errorCount})`; }
+            else if (msg.type === 'cancelled') { btn.textContent = `Cancelled (${msg.completedCount}/${msg.totalCount})`; }
+          }
+        }
+      } catch (e) { alert('Bulk render error: ' + e.message); }
+      btn.disabled = false;
+      cancelBtn.style.display = 'none';
+    });
+
+    document.getElementById('btn-bulk-cancel').addEventListener('click', async () => {
+      try { await fetch('/api/bulk-cancel', {method: 'POST'}); } catch {}
+      document.getElementById('btn-bulk-cancel').style.display = 'none';
+    });
+
+    // ── Init ─────────────────────────────────────────────────────
+    loadTemplates();
+  </script>
+</body>
+</html>
