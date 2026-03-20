@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(node scripts/preview-server.js)",
+      "Bash(netstat -ano)",
+      "Bash(findstr \":3001\")",
+      "Bash(findstr LISTENING)",
+      "Bash(cmd /c \"wmic process where processid=25060 get name,commandline 2>&1\")",
+      "Bash(powershell -Command \"\\(New-Object Net.WebClient\\).DownloadString\\(''http://localhost:3001/api/scenes''\\) | ConvertFrom-Json | Select-Object -ExpandProperty scenes | Measure-Object | Select-Object -ExpandProperty Count\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3001/api/status)",
+      "Bash(curl:*)",
+      "Bash(python3:*)",
+      "Bash(magick identify:*)",
+      "Bash(identify \"C:/Users/HomePC/Documents/Cursor Projects/Ashley Remotion 1/public/Ashley-Logo-Horizontal_PNG_et54ya.png\")"
+    ]
+  }
+}
