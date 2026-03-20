@@ -16,6 +16,7 @@ import {Gap3jy} from "./scenes/Generated_Gap3jy";
 import {Dedluo} from "./scenes/Generated_Dedluo";
 import {AHSEndCardWipeTransitionVERTSPAN} from "./scenes/Generated_AHSEndCardWipeTransitionVERTSPAN";
 import {LogoValidation} from "./LogoValidation";
+import {AHSEndCardWipeTransitionVERTSPAN1} from "./scenes/Generated_AHSEndCardWipeTransitionVERTSPAN1";
 
 const DEFAULT_DISCLAIMER =
   "Ashley stores are independently owned and operated. ©2024 Rogers Furniture, DBA Ashley. All rights reserved. Furniture since 1945.";
@@ -219,6 +220,18 @@ export const RemotionRoot: React.FC = () => {
         fps={30}
         width={1920}
         height={1080}
+      />
+      <Composition
+        id="AHSEndCardWipeTransitionVERTSPAN1"
+        component={AHSEndCardWipeTransitionVERTSPAN1}
+        durationInFrames={236}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{
+          tagline: "COMPRA EN TIENDA Y EN LÍNEA",
+          disclaimer: "© 2024 Ashley Global Retail, LLC. Todos los derechos reservados.",
+        }}
       />
     </>
   );

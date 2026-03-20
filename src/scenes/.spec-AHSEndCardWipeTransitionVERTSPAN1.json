@@ -1,0 +1,123 @@
+{
+  "durationFrames": 236,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "background": {
+    "type": "solid",
+    "color": "#FFFFFF"
+  },
+  "elements": [
+    {
+      "id": "logo-group",
+      "type": "group",
+      "position": {
+        "topPercent": 37,
+        "centerHorizontal": true
+      },
+      "children": [
+        {
+          "id": "logo-icon",
+          "type": "image",
+          "asset": "HouseIcon_primary.png",
+          "size": {
+            "height": 165
+          }
+        },
+        {
+          "id": "logo-wordmark",
+          "type": "image",
+          "asset": "Ashley-Wordmark-White_PNG_u7iaxp.png",
+          "size": {
+            "height": 150
+          }
+        }
+      ],
+      "layout": {
+        "direction": "column",
+        "gap": 15,
+        "alignItems": "center"
+      }
+    },
+    {
+      "id": "tagline",
+      "type": "text",
+      "content": "COMPRA EN TIENDA Y EN LÍNEA",
+      "isTextProp": true,
+      "propName": "tagline",
+      "style": {
+        "fontFamily": "Chesna Grotesk",
+        "fontSize": 48,
+        "fontWeight": 600,
+        "color": "#333333",
+        "letterSpacing": 4,
+        "textTransform": "uppercase",
+        "textAlign": "center"
+      },
+      "position": {
+        "belowElement": "logo-group",
+        "marginTop": 40,
+        "centerHorizontal": true
+      },
+      "box": {
+        "backgroundColor": "#E87722",
+        "padding": {
+          "top": 20,
+          "bottom": 20,
+          "left": 50,
+          "right": 50
+        }
+      }
+    },
+    {
+      "id": "disclaimer",
+      "type": "text",
+      "content": "© 2024 Ashley Global Retail, LLC. Todos los derechos reservados.",
+      "isTextProp": true,
+      "propName": "disclaimer",
+      "position": {
+        "bottomPx": 40,
+        "centerHorizontal": true
+      },
+      "style": {
+        "fontFamily": "Chesna Grotesk",
+        "fontSize": 20,
+        "fontWeight": 400,
+        "color": "#333333",
+        "letterSpacing": 0.5,
+        "textAlign": "center"
+      }
+    }
+  ],
+  "animations": [
+    {
+      "targets": [
+        "logo-group"
+      ],
+      "type": "fade-in",
+      "startFrame": 15,
+      "postEffect": "scale-throb"
+    },
+    {
+      "targets": [
+        "disclaimer"
+      ],
+      "type": "fade-in",
+      "startFrame": 15,
+      "postEffect": null
+    },
+    {
+      "targets": [
+        "tagline"
+      ],
+      "type": "fade-in",
+      "startFrame": 18,
+      "postEffect": null
+    }
+  ],
+  "textContent": {
+    "tagline": "COMPRA EN TIENDA Y EN LÍNEA",
+    "disclaimer": "© 2024 Ashley Global Retail, LLC. Todos los derechos reservados."
+  },
+  "notes": "The original image is portrait (1080x1920), but the output is for a landscape (1920x1080) frame. Sizes and positions have been estimated for this new aspect ratio. The logo wordmark in the source image is white with a thin outline to be visible on the white background; since an outlined asset is not available, the standard white wordmark is used. A `box` property was added to the tagline to represent the orange bar, as this is a critical visual element."
+}
