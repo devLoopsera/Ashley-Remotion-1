@@ -90,13 +90,7 @@ export const RemotionRoot: React.FC = () => {
         width={1920}
         height={1080}
         defaultProps={{
-          locations: [
-            {
-              "address": "Street Address",
-              "city": "City, State Zip",
-              "phone": "(000) 000-0000"
-            }
-          ],
+          locations: [],
         }}
       />
       <Composition
@@ -126,6 +120,7 @@ export const RemotionRoot: React.FC = () => {
         height={1080}
         defaultProps={{
           disclaimer: "©2022 Ashley Furniture Industries, LLC. All rights reserved.",
+          locations: [{city: "City Name", address: "Street Address"}],
         }}
       />
       <Composition
@@ -193,13 +188,18 @@ export const RemotionRoot: React.FC = () => {
         width={1920}
         height={1080}
         defaultProps={{
+          tagline: "SHOP MORE DEALS IN STORE AND ONLINE",
           locations: [
             {
-              "address": "Street Address",
-              "city": "City, State Zip",
-              "phone": "(000) 000-0000"
+              "city": "Del Rio",
+              "address": "504 E 10th St.\nDel Rio, TX 78840"
+            },
+            {
+              "city": "Eagle Pass",
+              "address": "101 Aztec Dr.\nEagle Pass, TX 78852"
             }
           ],
+          disclaimer: "Ashley stores are independently owned and operated. ©2026 PLR FURNITURE, INC., DBA Ashley. All rights reserved. Expiration date 3/31/2026",
         }}
       />
       <Composition

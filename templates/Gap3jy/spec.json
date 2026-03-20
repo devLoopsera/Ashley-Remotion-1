@@ -1,41 +1,43 @@
 {
-  "durationFrames": 67,
+  "durationFrames": 69,
   "fps": 30,
   "width": 1920,
   "height": 1080,
   "background": {
     "type": "solid",
-    "color": "#432D1F"
+    "color": "#4A2C1A"
   },
   "elements": [
     {
       "id": "logo-group",
       "type": "group",
       "position": {
-        "topPercent": 34,
+        "topPercent": 29,
         "centerHorizontal": true
       },
       "children": [
         {
           "id": "logo-icon",
-          "type": "image",
-          "asset": "HouseIcon_white.png",
-          "size": {
-            "height": 108
+          "type": "svg-component",
+          "component": "AshleyHouseIcon",
+          "props": {
+            "color": "#FFFFFF",
+            "height": 112
           }
         },
         {
           "id": "logo-wordmark",
-          "type": "image",
-          "asset": "Ashley-Wordmark-White_PNG_u7iaxp.png",
-          "size": {
-            "height": 100
+          "type": "svg-component",
+          "component": "AshleyWordmark",
+          "props": {
+            "color": "#FFFFFF",
+            "height": 90
           }
         }
       ],
       "layout": {
         "direction": "row",
-        "gap": 20,
+        "gap": 25,
         "alignItems": "center"
       }
     },
@@ -47,16 +49,15 @@
       "propName": "tagline",
       "style": {
         "fontFamily": "Chesna Grotesk",
-        "fontSize": 28,
-        "fontWeight": 400,
+        "fontSize": 32,
+        "fontWeight": 600,
         "color": "#FFFFFF",
-        "letterSpacing": "1.5px",
+        "letterSpacing": "2px",
         "textTransform": "uppercase"
       },
       "position": {
         "belowElement": "logo-group",
-        "marginTop": 15,
-        "centerHorizontal": true
+        "marginTop": 26
       }
     },
     {
@@ -65,12 +66,12 @@
       "isArrayProp": true,
       "propName": "locations",
       "position": {
-        "bottomPx": 250,
+        "bottomPx": 200,
         "centerHorizontal": true
       },
       "layout": {
         "direction": "row",
-        "gap": 450,
+        "gap": 180,
         "alignItems": "flex-start"
       },
       "itemTemplate": {
@@ -81,10 +82,10 @@
             "propPath": "city",
             "style": {
               "fontFamily": "Chesna Grotesk",
-              "fontSize": 60,
+              "fontSize": 54,
               "fontWeight": 600,
               "color": "#FFFFFF",
-              "letterSpacing": "2px",
+              "letterSpacing": "4px",
               "textTransform": "uppercase",
               "textAlign": "center"
             }
@@ -100,6 +101,9 @@
               "color": "#FFFFFF",
               "letterSpacing": "1px",
               "textAlign": "center"
+            },
+            "position": {
+              "marginTop": 10
             }
           }
         ]
@@ -117,9 +121,9 @@
       },
       "style": {
         "fontFamily": "Chesna Grotesk",
-        "fontSize": 20,
+        "fontSize": 22,
         "fontWeight": 400,
-        "color": "#E0E0E0",
+        "color": "#FFFFFF",
         "letterSpacing": "0.5px",
         "textAlign": "center"
       }
@@ -128,20 +132,13 @@
   "animations": [
     {
       "targets": [
-        "locations"
-      ],
-      "type": "fade-in",
-      "startFrame": 6,
-      "postEffect": null
-    },
-    {
-      "targets": [
         "logo-group",
         "tagline",
+        "locations",
         "disclaimer"
       ],
       "type": "fade-in",
-      "startFrame": 9,
+      "startFrame": 0,
       "postEffect": null
     }
   ],

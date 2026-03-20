@@ -1,19 +1,19 @@
 {
-  "name": "Gap3jy",
-  "displayName": "Gap3jy",
+  "name": "Dedluo",
+  "displayName": "Dedluo",
   "category": "promo",
-  "description": "3",
-  "sourceComponent": "Gap3jy",
+  "description": "4",
+  "sourceComponent": "Dedluo",
   "variables": [
     {
       "id": "prop:tagline",
       "category": "content",
       "label": "Tagline",
       "type": "text",
-      "defaultValue": "SHOP MORE DEALS IN STORE",
+      "defaultValue": "SHOP MORE DEALS IN STORE AND ONLINE",
       "customizable": true,
       "name": "tagline",
-      "placeholder": "e.g. SHOP MORE DEALS IN STORE",
+      "placeholder": "e.g. SHOP MORE DEALS IN STORE AND ONLINE",
       "required": true
     },
     {
@@ -23,17 +23,17 @@
       "type": "locations",
       "defaultValue": [
         {
-          "city": "MARQUETTE",
-          "address": "2152 US Hwy 41 W"
+          "city": "Del Rio",
+          "address": "504 E 10th St.\nDel Rio, TX 78840"
         },
         {
-          "city": "ESCANABA",
-          "address": "2222 North Lincoln Road"
+          "city": "Eagle Pass",
+          "address": "101 Aztec Dr.\nEagle Pass, TX 78852"
         }
       ],
       "customizable": true,
       "name": "locations",
-      "placeholder": "e.g. [{\"city\":\"MARQUETTE\",\"address\":\"2152 US Hwy 41 W\"},{\"city\":\"ESCANABA\",\"addr",
+      "placeholder": "e.g. [{\"city\":\"Del Rio\",\"address\":\"504 E 10th St.\\nDel Rio, TX 78840\"},{\"city\":\"",
       "required": true
     },
     {
@@ -41,10 +41,10 @@
       "category": "content",
       "label": "Disclaimer",
       "type": "text",
-      "defaultValue": "Ashley stores are independently owned and operated. ©2026 Roger's Furniture, DBA Ashley. All rights reserved. Expiration date 3/30/2026",
+      "defaultValue": "Ashley stores are independently owned and operated. ©2026 PLR FURNITURE, INC., DBA Ashley. All rights reserved. Expiration date 3/31/2026",
       "customizable": true,
       "name": "disclaimer",
-      "placeholder": "e.g. Ashley stores are independently owned and operated. ©2026 Roger's Furniture",
+      "placeholder": "e.g. Ashley stores are independently owned and operated. ©2026 PLR FURNITURE, IN",
       "required": false
     }
   ],
@@ -54,7 +54,7 @@
       "category": "design",
       "label": "Background",
       "type": "color",
-      "defaultValue": "#4A2C1A",
+      "defaultValue": "#382A22",
       "customizable": true
     },
     {
@@ -83,20 +83,20 @@
     }
   ],
   "spec": {
-    "durationFrames": 69,
+    "durationFrames": 110,
     "fps": 30,
     "width": 1920,
     "height": 1080,
     "background": {
       "type": "solid",
-      "color": "#4A2C1A"
+      "color": "#382A22"
     },
     "elements": [
       {
         "id": "logo-group",
         "type": "group",
         "position": {
-          "topPercent": 29,
+          "topPercent": 31,
           "centerHorizontal": true
         },
         "children": [
@@ -106,7 +106,7 @@
             "component": "AshleyHouseIcon",
             "props": {
               "color": "#FFFFFF",
-              "height": 112
+              "height": 96
             }
           },
           {
@@ -115,33 +115,33 @@
             "component": "AshleyWordmark",
             "props": {
               "color": "#FFFFFF",
-              "height": 90
+              "height": 96
             }
           }
         ],
         "layout": {
           "direction": "row",
-          "gap": 25,
+          "gap": 24,
           "alignItems": "center"
         }
       },
       {
         "id": "tagline",
         "type": "text",
-        "content": "SHOP MORE DEALS IN STORE",
+        "content": "SHOP MORE DEALS IN STORE AND ONLINE",
         "isTextProp": true,
         "propName": "tagline",
         "style": {
           "fontFamily": "Chesna Grotesk",
-          "fontSize": 32,
-          "fontWeight": 600,
+          "fontSize": 28,
+          "fontWeight": 400,
           "color": "#FFFFFF",
-          "letterSpacing": "2px",
+          "letterSpacing": "1.5",
           "textTransform": "uppercase"
         },
         "position": {
           "belowElement": "logo-group",
-          "marginTop": 26
+          "marginTop": 20
         }
       },
       {
@@ -150,15 +150,20 @@
         "isArrayProp": true,
         "propName": "locations",
         "position": {
-          "bottomPx": 200,
+          "belowElement": "tagline",
+          "marginTop": 120,
           "centerHorizontal": true
         },
         "layout": {
           "direction": "row",
-          "gap": 180,
+          "gap": 240,
           "alignItems": "flex-start"
         },
         "itemTemplate": {
+          "layout": {
+            "direction": "column",
+            "gap": 10
+          },
           "children": [
             {
               "id": "city",
@@ -166,12 +171,10 @@
               "propPath": "city",
               "style": {
                 "fontFamily": "Chesna Grotesk",
-                "fontSize": 54,
+                "fontSize": 48,
                 "fontWeight": 600,
                 "color": "#FFFFFF",
-                "letterSpacing": "4px",
-                "textTransform": "uppercase",
-                "textAlign": "center"
+                "letterSpacing": "1"
               }
             },
             {
@@ -180,14 +183,11 @@
               "propPath": "address",
               "style": {
                 "fontFamily": "Chesna Grotesk",
-                "fontSize": 44,
+                "fontSize": 40,
                 "fontWeight": 400,
                 "color": "#FFFFFF",
-                "letterSpacing": "1px",
-                "textAlign": "center"
-              },
-              "position": {
-                "marginTop": 10
+                "letterSpacing": "0.5",
+                "lineHeight": 1.2
               }
             }
           ]
@@ -200,15 +200,15 @@
         "isTextProp": true,
         "propName": "disclaimer",
         "position": {
-          "bottomPx": 90,
+          "bottomPx": 50,
           "centerHorizontal": true
         },
         "style": {
           "fontFamily": "Chesna Grotesk",
-          "fontSize": 22,
+          "fontSize": 20,
           "fontWeight": 400,
-          "color": "#FFFFFF",
-          "letterSpacing": "0.5px",
+          "color": "#E0E0E0",
+          "letterSpacing": "0.5",
           "textAlign": "center"
         }
       }
@@ -222,26 +222,25 @@
           "disclaimer"
         ],
         "type": "fade-in",
-        "startFrame": 0,
+        "startFrame": 12,
         "postEffect": null
       }
     ],
     "textContent": {
-      "tagline": "SHOP MORE DEALS IN STORE",
-      "disclaimer": "Ashley stores are independently owned and operated. ©2026 Roger's Furniture, DBA Ashley. All rights reserved. Expiration date 3/30/2026",
+      "tagline": "SHOP MORE DEALS IN STORE AND ONLINE",
+      "disclaimer": "Ashley stores are independently owned and operated. ©2026 PLR FURNITURE, INC., DBA Ashley. All rights reserved. Expiration date 3/31/2026",
       "locations": [
         {
-          "city": "MARQUETTE",
-          "address": "2152 US Hwy 41 W"
+          "city": "Del Rio",
+          "address": "504 E 10th St.\nDel Rio, TX 78840"
         },
         {
-          "city": "ESCANABA",
-          "address": "2222 North Lincoln Road"
+          "city": "Eagle Pass",
+          "address": "101 Aztec Dr.\nEagle Pass, TX 78852"
         }
       ]
-    },
-    "notes": []
+    }
   },
   "hasPreview": true,
-  "createdAt": "2026-03-20T15:29:17.563Z"
+  "createdAt": "2026-03-20T16:35:49.798Z"
 }

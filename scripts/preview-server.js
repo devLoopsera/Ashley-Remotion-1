@@ -765,6 +765,65 @@ app.get("/api/templates", (_req, res) => {
 });
 
 // ── Get template detail ─────────────────────────────────────────────────
+// ── Delete template ──────────────────────────────────────────────────────────
+app.delete("/api/templates/:name", (req, res) => {
+  const {name} = req.params;
+  if (!name || !/^[A-Za-z0-9_-]+$/.test(name)) {
+    return res.status(400).json({error: "Invalid template name"});
+  }
+
+  const templateDir = path.join(TEMPLATES_DIR, name);
+  if (!fs.existsSync(templateDir)) {
+    return res.status(404).json({error: `Template "${name}" not found`});
+  }
+
+  // Read manifest to find the source component name
+  let sourceComponent = null;
+  try {
+    const manifest = JSON.parse(fs.readFileSync(path.join(templateDir, "template.json"), "utf8"));
+    sourceComponent = manifest.sourceComponent || null;
+  } catch {}
+
+  // 1. Remove template folder
+  fs.rmSync(templateDir, {recursive: true, force: true});
+
+  // 2. Remove generated component file from src/scenes/
+  if (sourceComponent) {
+    const componentFile = path.join(SCENES_DIR, `Generated_${sourceComponent}.tsx`);
+    if (fs.existsSync(componentFile)) fs.rmSync(componentFile);
+
+    // 3. Remove spec and ref files
+    for (const ext of [".json", ".png", ".jpg", ".jpeg", ".webp", ".mp4"]) {
+      const specFile = path.join(SCENES_DIR, `.spec-${sourceComponent}${ext}`);
+      if (fs.existsSync(specFile)) fs.rmSync(specFile);
+      const refFile = path.join(SCENES_DIR, `.ref-${sourceComponent}${ext}`);
+      if (fs.existsSync(refFile)) fs.rmSync(refFile);
+    }
+
+    // 4. Remove from Root.tsx — import line and <Composition> block
+    const rootPath = path.join(__dirname, "..", "src", "Root.tsx");
+    let rootContent = fs.readFileSync(rootPath, "utf8");
+
+    // Remove import line
+    rootContent = rootContent.replace(
+      new RegExp(`\\nimport \\{${sourceComponent}\\} from "\\..*Generated_${sourceComponent}";`),
+      ""
+    );
+
+    // Remove <Composition ... /> block for this component
+    const compRegex = new RegExp(
+      `\\s*<Composition[^>]*id="${sourceComponent}"[\\s\\S]*?(?:\\/?>|\\/>)(?:[\\s\\S]*?<\\/Composition>)?`,
+      "g"
+    );
+    rootContent = rootContent.replace(compRegex, "");
+
+    fs.writeFileSync(rootPath, rootContent, "utf8");
+  }
+
+  console.log(`Deleted template "${name}"${sourceComponent ? ` (component: ${sourceComponent})` : ""}`);
+  res.json({ok: true});
+});
+
 app.get("/api/templates/:name", (req, res) => {
   const {name} = req.params;
   const manifestPath = path.join(TEMPLATES_DIR, name, "template.json");

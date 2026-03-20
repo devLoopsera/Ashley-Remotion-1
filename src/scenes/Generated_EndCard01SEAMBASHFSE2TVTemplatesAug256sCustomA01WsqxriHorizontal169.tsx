@@ -1,21 +1,20 @@
 import React from 'react';
 import {
+	AbsoluteFill,
+	spring,
 	useCurrentFrame,
 	useVideoConfig,
-	AbsoluteFill,
-	staticFile,
-	spring,
-	Img,
 } from 'remotion';
+import {AshleyHouseIcon, AshleyWordmark} from '../components/logo';
 import {CHESNA, useFonts} from '../loadFonts';
 
 export type EndCard01SEAMBASHFSE2TVTemplatesAug256sCustomA01WsqxriHorizontal169Props =
 	{
-		locations: Array<{
+		locations: {
 			address: string;
 			city: string;
 			phone: string;
-		}>;
+		}[];
 	};
 
 export const EndCard01SEAMBASHFSE2TVTemplatesAug256sCustomA01WsqxriHorizontal169: React.FC<
@@ -25,51 +24,51 @@ export const EndCard01SEAMBASHFSE2TVTemplatesAug256sCustomA01WsqxriHorizontal169
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 
-	// Animations
 	const logoFadeIn = spring({
-		frame: frame - 6,
-		fps,
-		config: {damping: 12, mass: 0.5},
-	});
-	const locationsFadeIn = spring({
 		frame: frame - 12,
 		fps,
 		config: {damping: 12, mass: 0.5},
 	});
+	const locationsFadeIn = spring({
+		frame: frame - 18,
+		fps,
+		config: {damping: 12, mass: 0.5},
+	});
+
+	// Per brand guidelines:
+	const wordmarkHeight = 150;
+	const iconHeight = wordmarkHeight * 0.94; // = 141
+	const logoGap = iconHeight * 0.25; // = 35.25
 
 	return (
-		<AbsoluteFill style={{backgroundColor: '#F8F8F8'}}>
+		<AbsoluteFill style={{backgroundColor: '#F9F9F9'}}>
 			{/* Logo Group */}
 			<div
 				style={{
 					position: 'absolute',
-					top: 285,
-					left: 1188,
-					width: 375,
+					top: '38%',
+					left: '71.875%',
+					transform: 'translate(-50%, -50%)', // Center group on the coordinates
 					display: 'flex',
-					flexDirection: 'column',
-					gap: 15,
+					flexDirection: 'row',
+					gap: logoGap,
 					alignItems: 'center',
 					opacity: logoFadeIn,
 				}}
 			>
-				<Img
-					src={staticFile('HouseIcon_primary.png')}
-					style={{height: 135, width: 'auto'}}
-				/>
-				<Img
-					src={staticFile('Ashley-Wordmark-Black_PNG_u7iaxp.png')}
-					style={{height: 110, width: 'auto'}}
-				/>
+				<AshleyHouseIcon color="#E87722" height={iconHeight} />
+				<AshleyWordmark color="#333333" height={wordmarkHeight} />
 			</div>
 
-			{/* Locations */}
+			{/* Locations Group */}
 			<div
 				style={{
 					position: 'absolute',
-					top: 590,
-					left: 1050,
-					width: 650,
+					// This calculation correctly positions the locations group below the
+					// vertically centered logo group.
+					top: `calc(38% + ${wordmarkHeight / 2 + 40}px)`,
+					left: '71.875%', // Horizontally aligned with the logo
+					transform: 'translateX(-50%)', // Center group on the left coordinate
 					opacity: locationsFadeIn,
 				}}
 			>
@@ -77,28 +76,27 @@ export const EndCard01SEAMBASHFSE2TVTemplatesAug256sCustomA01WsqxriHorizontal169
 					style={{
 						display: 'flex',
 						flexDirection: 'row',
-						gap: 150,
-						justifyContent: 'center',
+						alignItems: 'flex-start',
+						gap: 60,
 					}}
 				>
 					{locations.map((location, index) => (
 						<div
-							key={index}
+							key={`location-${index}`}
 							style={{
 								display: 'flex',
 								flexDirection: 'column',
-								gap: 10,
-								alignItems: 'center',
+								alignItems: 'flex-start',
+								gap: 8,
 							}}
 						>
 							<p
 								style={{
 									fontFamily: CHESNA,
-									fontSize: 55,
+									fontSize: 64,
 									fontWeight: 600,
 									color: '#333333',
 									letterSpacing: 0,
-									textAlign: 'center',
 									margin: 0,
 								}}
 							>
@@ -107,11 +105,10 @@ export const EndCard01SEAMBASHFSE2TVTemplatesAug256sCustomA01WsqxriHorizontal169
 							<p
 								style={{
 									fontFamily: CHESNA,
-									fontSize: 55,
+									fontSize: 64,
 									fontWeight: 600,
 									color: '#333333',
 									letterSpacing: 0,
-									textAlign: 'center',
 									margin: 0,
 								}}
 							>
@@ -120,11 +117,10 @@ export const EndCard01SEAMBASHFSE2TVTemplatesAug256sCustomA01WsqxriHorizontal169
 							<p
 								style={{
 									fontFamily: CHESNA,
-									fontSize: 55,
+									fontSize: 64,
 									fontWeight: 600,
 									color: '#333333',
 									letterSpacing: 0,
-									textAlign: 'center',
 									margin: 0,
 								}}
 							>

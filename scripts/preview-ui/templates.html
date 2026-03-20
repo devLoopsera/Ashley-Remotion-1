@@ -71,6 +71,14 @@
     }
     .tpl-card-info { font-size: 10px; color: rgba(255,255,255,0.2); }
     .empty-state { text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.2); font-size: 13px; }
+    .tpl-card { position: relative; }
+    .tpl-card-delete {
+      position: absolute; top: 8px; right: 8px; z-index: 10;
+      background: rgba(220,50,50,0.85); border: none; border-radius: 6px;
+      color: #fff; font-size: 11px; padding: 4px 9px; cursor: pointer;
+      line-height: 1; font-weight: 600;
+    }
+    .tpl-card-delete:hover { background: rgba(200,30,30,1); }
 
     /* ── Detail modal ── */
     .detail-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 1001; justify-content: center; align-items: flex-start; overflow-y: auto; padding: 40px 20px; }
@@ -389,6 +397,7 @@
         const card = document.createElement('div');
         card.className = 'tpl-card';
         card.innerHTML = `
+          <button class="tpl-card-delete" title="Delete template">&times; Delete</button>
           ${tpl.previewUrl
             ? `<img class="tpl-card-thumb" src="${tpl.previewUrl}" alt="${tpl.displayName}" loading="lazy" />`
             : `<div class="tpl-card-no-thumb">&#x1F3AC;</div>`}
@@ -400,8 +409,27 @@
               <span class="tpl-card-info">${tpl.variableCount} var${tpl.variableCount !== 1 ? 's' : ''} &middot; ${dateStr}</span>
             </div>
           </div>`;
+        card.querySelector('.tpl-card-delete').addEventListener('click', (e) => {
+          e.stopPropagation();
+          deleteTemplate(tpl.name, tpl.displayName || tpl.name, card);
+        });
         card.addEventListener('click', () => openTemplateDetail(tpl.name));
         grid.appendChild(card);
+      }
+    }
+
+    // ── Delete template ──────────────────────────────────────────
+    async function deleteTemplate(name, displayName, cardEl) {
+      if (!confirm(`Delete template "${displayName}"?\n\nThis will remove it from the template library, Root.tsx, and the generated component file.`)) return;
+      try {
+        const res = await fetch(`/api/templates/${encodeURIComponent(name)}`, {method: 'DELETE'});
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Delete failed');
+        cardEl.remove();
+        allTemplates = allTemplates.filter(t => t.name !== name);
+        document.getElementById('page-sub').textContent = `Showing ${allTemplates.length} of ${allTemplates.length} template(s)`;
+      } catch (err) {
+        alert(`Failed to delete: ${err.message}`);
       }
     }
 
