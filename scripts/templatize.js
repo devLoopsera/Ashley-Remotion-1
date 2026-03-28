@@ -233,6 +233,7 @@ async function templatize({imagePath, videoPath, componentName, specPath, skipWr
     try { fs.copyFileSync(imagePath, refFile); } catch {}
   }
 
+
   // ── Step 4: QA — render last frame and compare with reference ────
   const lastFrame = (spec.durationFrames || 150) - 1;
 

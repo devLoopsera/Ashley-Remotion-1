@@ -21,7 +21,7 @@ const {templatize, applyOverrides, findFontFiles, registerInRoot} = require("./t
 const {execSync, exec} = require("child_process");
 const {generateComponent} = require("./generate-component");
 const {runQACheck, findSavedReference, fixHandTypedLogo} = require("./qa-check");
-const {extractLastFrame, transcodeForBrowser, enforceLogoSplit} = require("./analyze-design");
+const {extractLastFrame, transcodeForBrowser, enforceLogoSplit, clipToEndScreen} = require("./analyze-design");
 
 const PORT = 3001;
 const IS_VERCEL = Boolean(process.env.VERCEL);
@@ -40,6 +40,16 @@ const FONT_EXTS = new Set([".ttf", ".otf", ".woff", ".woff2"]);
 // Ensure tmp & templates dirs exist
 if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR, {recursive: true});
 if (!fs.existsSync(TEMPLATES_DIR)) fs.mkdirSync(TEMPLATES_DIR, {recursive: true});
+
+// On startup: remove transient tmp files left over from previous sessions.
+// We keep video-ref-*.mp4 because they may be waiting for a template save.
+try {
+  for (const f of fs.readdirSync(TMP_DIR)) {
+    if (/^(upload-|last-frame-|browser-)/.test(f)) {
+      try { fs.unlinkSync(path.join(TMP_DIR, f)); } catch {}
+    }
+  }
+} catch {}
 
 const app = express();
 
@@ -320,6 +330,40 @@ app.post("/api/generate", async (req, res) => {
     });
   }
 
+  // Save a browser-compatible H.264 MP4 reference for template preview.
+  // Prefer the already-transcoded browser-*.mp4 if the client sent its ID;
+  // otherwise transcode the raw upload now (adds ~5s but only done once).
+  const previewVideoId = (req.body?.previewVideoId || "").trim();
+  const videoRefPath = path.join(TMP_DIR, `video-ref-${componentName}.mp4`);
+  // Remove stale ref from a previous generate for this component name
+  if (fs.existsSync(videoRefPath)) { try { fs.unlinkSync(videoRefPath); } catch {} }
+  if (previewVideoId && !previewVideoId.includes("..") && !previewVideoId.includes("/") && !previewVideoId.includes("\\")) {
+    const previewPath = path.join(TMP_DIR, previewVideoId);
+    if (fs.existsSync(previewPath)) {
+      try {
+        fs.copyFileSync(previewPath, videoRefPath);
+        console.log(`[generate] Saved browser-compatible video ref from ${previewVideoId}`);
+      } catch (e) {
+        console.log(`[generate] Failed to copy preview video: ${e.message}`);
+      }
+    } else {
+      console.log(`[generate] previewVideoId not found in tmp: ${previewVideoId}`);
+    }
+  } else if (resolvedVideoPath && fs.existsSync(resolvedVideoPath)) {
+    console.log(`[generate] No previewVideoId — transcoding original for video ref…`);
+    try {
+      const transcoded = transcodeForBrowser(resolvedVideoPath);
+      if (transcoded) {
+        fs.renameSync(transcoded, videoRefPath);
+        console.log(`[generate] Transcoded and saved video ref: video-ref-${componentName}.mp4`);
+      } else {
+        console.log(`[generate] Transcode returned null — no video ref saved`);
+      }
+    } catch (e) {
+      console.log(`[generate] Failed to transcode video: ${e.message}`);
+    }
+  }
+
   // ── Set up SSE ────────────────────────────────────────────────
   res.writeHead(200, {
     "Content-Type": "text/event-stream",
@@ -365,6 +409,7 @@ app.post("/api/generate", async (req, res) => {
       clipStartSec: clipStartSec || null,
       clipEndSec: clipEndSec || null,
     });
+
     send({type: "success", componentName});
   } catch (err) {
     send({type: "error", message: err.message});
@@ -373,6 +418,10 @@ app.post("/api/generate", async (req, res) => {
     console.error = origErr;
     process.stdout.write = origStdoutWrite;
     cleanup();
+    // Clean up the transcoded browser preview and frame files from this session
+    if (previewVideoId && !previewVideoId.includes("..") && !previewVideoId.includes("/") && !previewVideoId.includes("\\")) {
+      try { fs.unlinkSync(path.join(TMP_DIR, previewVideoId)); } catch {}
+    }
     res.end();
   }
 });
@@ -712,6 +761,19 @@ app.post("/api/save-template", (req, res) => {
     }
   }
 
+  // Move reference video from tmp into the template folder and remove from tmp
+  const videoRefPath = path.join(TMP_DIR, `video-ref-${componentName}.mp4`);
+  if (fs.existsSync(videoRefPath)) {
+    const destVideo = path.join(templateDir, "reference.mp4");
+    try {
+      fs.renameSync(videoRefPath, destVideo); // atomic move (same drive)
+    } catch {
+      // Cross-drive fallback: copy then delete
+      try { fs.copyFileSync(videoRefPath, destVideo); } catch {}
+      try { fs.unlinkSync(videoRefPath); } catch {}
+    }
+  }
+
   // Write template manifest
   const manifest = {
     name: safeName,
@@ -746,6 +808,11 @@ app.get("/api/templates", (_req, res) => {
       for (const ext of [".png", ".jpg", ".jpeg", ".webp"]) {
         if (fs.existsSync(path.join(TEMPLATES_DIR, entry, `reference${ext}`))) { previewExt = ext; break; }
       }
+      // Find preview video
+      let videoExt = null;
+      for (const ext of [".mp4", ".mov"]) {
+        if (fs.existsSync(path.join(TEMPLATES_DIR, entry, `reference${ext}`))) { videoExt = ext; break; }
+      }
       templates.push({
         name: manifest.name,
         displayName: manifest.displayName || manifest.name,
@@ -755,6 +822,7 @@ app.get("/api/templates", (_req, res) => {
         variableCount: (manifest.variables || manifest.fields || []).length,
         hasPreview: !!previewExt,
         previewUrl: previewExt ? `/templates/${entry}/reference${previewExt}` : null,
+        videoUrl: videoExt ? `/templates/${entry}/reference${videoExt}` : null,
         createdAt: manifest.createdAt,
       });
     } catch {}

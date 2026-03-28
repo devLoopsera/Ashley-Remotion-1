@@ -1188,6 +1188,7 @@
     let files = {screenshot: null, video: null, logo: null, bgImage: null};
     let assetChoices = {logos: [], bgImage: null, bgColor: null, fontFamily: null};
     let stagedVideoId = null;
+    let previewVideoId = null; // browser-compatible transcoded filename in tmp/
     let capturedFrameId = null;
     let capturedDurationFrames = null;
     let inPointSec = null;
@@ -1445,6 +1446,7 @@
       const video   = document.getElementById('video-player');
       const clipInfo = document.getElementById('clip-info');
       stagedVideoId = null;
+      previewVideoId = null;
       capturedFrameId = null;
       capturedDurationFrames = null;
       inPointSec = null;
@@ -1524,6 +1526,7 @@
         });
         const data = await r.json();
         if (!r.ok) return;
+        previewVideoId = data.previewUrl.split('/').pop(); // e.g. "browser-1234567890.mp4"
         const video = document.getElementById('video-player');
         const section = document.getElementById('video-player-section');
         // Swap src whether or not the original played — ensures consistent scrubbing
@@ -1597,6 +1600,7 @@
         zone.querySelector('.file-type').textContent = key === 'screenshot' ? '.png / .jpg / .webp' : '.mp4 / .mov';
         if (key === 'video') {
           stagedVideoId = null;
+          previewVideoId = null;
           capturedFrameId = null;
           capturedDurationFrames = null;
           inPointSec = null;
@@ -1855,6 +1859,7 @@
       if (files.screenshot) formData.append('screenshot', files.screenshot);
       if (stagedVideoId) {
         formData.append('videoId', stagedVideoId);
+        if (previewVideoId) formData.append('previewVideoId', previewVideoId);
       } else {
         formData.append('video', files.video);
       }

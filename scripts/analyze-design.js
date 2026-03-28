@@ -1219,4 +1219,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = {analyzeDesign, analyzeLayout, analyzeAnimations, extractLastFrame, transcodeForBrowser, enforceLogoSplit};
+module.exports = {analyzeDesign, analyzeLayout, analyzeAnimations, extractLastFrame, transcodeForBrowser, enforceLogoSplit, clipToEndScreen};

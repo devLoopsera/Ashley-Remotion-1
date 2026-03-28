@@ -11,12 +11,12 @@ import {TestCard} from "./scenes/Generated_TestCard";
 import {Q2AHSNATMemorialDayWeek4SocialHorzVideo15169FurnUq5fi9} from "./scenes/Generated_Q2AHSNATMemorialDayWeek4SocialHorzVideo15169FurnUq5fi9";
 import {EndCard02TEMASHLDECustomSupportTVTemplate15sA01Xnwae9} from "./scenes/Generated_EndCard02TEMASHLDECustomSupportTVTemplate15sA01Xnwae9";
 import {EndCard03SEAASHBedAchesCustomizations202515sTVSpotRoomSceneA01V1elp7} from "./scenes/Generated_EndCard03SEAASHBedAchesCustomizations202515sTVSpotRoomSceneA01V1elp7";
-import {Q2AGRNATPRTempurBreezeEVGTVYTMattress30sENG1080x1080Nzlmn9} from "./scenes/Generated_Q2AGRNATPRTempurBreezeEVGTVYTMattress30sENG1080x1080Nzlmn9";
-import {Gap3jy} from "./scenes/Generated_Gap3jy";
+import {Q2AGRNATPRTempurBreezeEVGTVYTMattress30sENG1080x1080Nzlmn9} from "./scenes/Generated_Q2AGRNATPRTempurBreezeEVGTVYTMattress30sENG1080x1080Nzlmn9";
 import {Dedluo} from "./scenes/Generated_Dedluo";
 import {AHSEndCardWipeTransitionVERTSPAN} from "./scenes/Generated_AHSEndCardWipeTransitionVERTSPAN";
 import {LogoValidation} from "./LogoValidation";
 import {AHSEndCardWipeTransitionVERTSPAN1} from "./scenes/Generated_AHSEndCardWipeTransitionVERTSPAN1";
+import {Gap3jy} from "./scenes/Generated_Gap3jy";
 
 const DEFAULT_DISCLAIMER =
   "Ashley stores are independently owned and operated. ©2024 Rogers Furniture, DBA Ashley. All rights reserved. Furniture since 1945.";
@@ -156,28 +156,6 @@ export const RemotionRoot: React.FC = () => {
         defaultProps={{
           tagline: "shop in-store & online",
           disclaimer: "Powered by Sleeptracker-AI®.",
-        }}
-      />
-      <Composition
-        id="Gap3jy"
-        component={Gap3jy}
-        durationInFrames={150}
-        fps={30}
-        width={1920}
-        height={1080}
-        defaultProps={{
-          tagline: "SHOP MORE DEALS IN STORE",
-          locations: [
-            {
-              "city": "MARQUETTE",
-              "address": "2152 US Hwy 41 W"
-            },
-            {
-              "city": "ESCANABA",
-              "address": "2222 North Lincoln Road"
-            }
-          ],
-          disclaimer: "Ashley stores are independently owned and operated. ©2026 Roger's Furniture, DBA Ashley. All rights reserved. Expiration date 3/30/2026",
         }}
       />
       <Composition

@@ -2,7 +2,7 @@
   "name": "Gap3jy",
   "displayName": "Gap3jy",
   "category": "promo",
-  "description": "3",
+  "description": "",
   "sourceComponent": "Gap3jy",
   "variables": [
     {
@@ -54,7 +54,7 @@
       "category": "design",
       "label": "Background",
       "type": "color",
-      "defaultValue": "#4A2C1A",
+      "defaultValue": "#3A2A1E",
       "customizable": true
     },
     {
@@ -83,20 +83,20 @@
     }
   ],
   "spec": {
-    "durationFrames": 69,
+    "durationFrames": 44,
     "fps": 30,
     "width": 1920,
     "height": 1080,
     "background": {
       "type": "solid",
-      "color": "#4A2C1A"
+      "color": "#3A2A1E"
     },
     "elements": [
       {
         "id": "logo-group",
         "type": "group",
         "position": {
-          "topPercent": 29,
+          "topPercent": 30,
           "centerHorizontal": true
         },
         "children": [
@@ -106,7 +106,7 @@
             "component": "AshleyHouseIcon",
             "props": {
               "color": "#FFFFFF",
-              "height": 112
+              "height": 110
             }
           },
           {
@@ -115,7 +115,7 @@
             "component": "AshleyWordmark",
             "props": {
               "color": "#FFFFFF",
-              "height": 90
+              "height": 100
             }
           }
         ],
@@ -133,15 +133,17 @@
         "propName": "tagline",
         "style": {
           "fontFamily": "Chesna Grotesk",
-          "fontSize": 32,
-          "fontWeight": 600,
+          "fontSize": 28,
+          "fontWeight": 400,
           "color": "#FFFFFF",
-          "letterSpacing": "2px",
-          "textTransform": "uppercase"
+          "letterSpacing": 2,
+          "textTransform": "uppercase",
+          "textAlign": "center"
         },
         "position": {
           "belowElement": "logo-group",
-          "marginTop": 26
+          "marginTop": 20,
+          "centerHorizontal": true
         }
       },
       {
@@ -150,15 +152,20 @@
         "isArrayProp": true,
         "propName": "locations",
         "position": {
-          "bottomPx": 200,
+          "bottomPx": 250,
           "centerHorizontal": true
         },
         "layout": {
           "direction": "row",
-          "gap": 180,
+          "gap": 190,
           "alignItems": "flex-start"
         },
         "itemTemplate": {
+          "layout": {
+            "direction": "column",
+            "gap": 5,
+            "alignItems": "flex-start"
+          },
           "children": [
             {
               "id": "city",
@@ -169,9 +176,8 @@
                 "fontSize": 54,
                 "fontWeight": 600,
                 "color": "#FFFFFF",
-                "letterSpacing": "4px",
-                "textTransform": "uppercase",
-                "textAlign": "center"
+                "letterSpacing": 1,
+                "textTransform": "uppercase"
               }
             },
             {
@@ -180,14 +186,10 @@
               "propPath": "address",
               "style": {
                 "fontFamily": "Chesna Grotesk",
-                "fontSize": 44,
+                "fontSize": 42,
                 "fontWeight": 400,
                 "color": "#FFFFFF",
-                "letterSpacing": "1px",
-                "textAlign": "center"
-              },
-              "position": {
-                "marginTop": 10
+                "letterSpacing": 0.5
               }
             }
           ]
@@ -200,15 +202,15 @@
         "isTextProp": true,
         "propName": "disclaimer",
         "position": {
-          "bottomPx": 90,
+          "bottomPx": 80,
           "centerHorizontal": true
         },
         "style": {
           "fontFamily": "Chesna Grotesk",
-          "fontSize": 22,
+          "fontSize": 20,
           "fontWeight": 400,
           "color": "#FFFFFF",
-          "letterSpacing": "0.5px",
+          "letterSpacing": 0.5,
           "textAlign": "center"
         }
       }
@@ -216,13 +218,20 @@
     "animations": [
       {
         "targets": [
+          "locations"
+        ],
+        "type": "fade-in",
+        "startFrame": 12,
+        "postEffect": null
+      },
+      {
+        "targets": [
           "logo-group",
           "tagline",
-          "locations",
           "disclaimer"
         ],
         "type": "fade-in",
-        "startFrame": 0,
+        "startFrame": 15,
         "postEffect": null
       }
     ],
@@ -240,8 +249,8 @@
         }
       ]
     },
-    "notes": []
+    "notes": "The disclaimer appears to have a line break before 'Expiration date' but is treated as a single line here."
   },
   "hasPreview": true,
-  "createdAt": "2026-03-20T15:29:17.563Z"
+  "createdAt": "2026-03-23T11:19:18.819Z"
 }
