@@ -1,19 +1,25 @@
 {
-  "name": "EndCard01SEAMBASHFSE2TVTemplatesAug256sCustomA01WsqxriHorizontal169",
-  "displayName": "EndCard01SEAMBASHFSE2TVTemplatesAug256sCustomA01WsqxriHorizontal169",
+  "name": "TestHorixontal",
+  "displayName": "Clean White End Card with Fading Logo",
   "category": "promo",
-  "description": "2",
-  "sourceComponent": "EndCard01SEAMBASHFSE2TVTemplatesAug256sCustomA01WsqxriHorizontal169",
+  "description": "This end card features a clean white background with a fading logo and location information. It's perfect for displaying store addresses and phone numbers at the end of a video.",
+  "sourceComponent": "TestHorixontal",
   "variables": [
     {
       "id": "prop:locations",
       "category": "content",
       "label": "Store Locations",
       "type": "locations",
-      "defaultValue": [],
+      "defaultValue": [
+        {
+          "address": "Street Address",
+          "city": "City, State Zip",
+          "phone": "(000) 000-0000"
+        }
+      ],
       "customizable": true,
       "name": "locations",
-      "placeholder": "e.g. []",
+      "placeholder": "e.g. [{\"address\":\"Street Address\",\"city\":\"City, State Zip\",\"phone\":\"(000) 000-00",
       "required": true
     }
   ],
@@ -23,7 +29,7 @@
       "category": "design",
       "label": "Background",
       "type": "color",
-      "defaultValue": "#F9F9F9",
+      "defaultValue": "#FFFFFF",
       "customizable": true
     },
     {
@@ -60,21 +66,21 @@
     }
   ],
   "spec": {
-    "durationFrames": 66,
+    "durationFrames": 68,
     "fps": 30,
     "width": 1920,
     "height": 1080,
     "background": {
       "type": "solid",
-      "color": "#F9F9F9"
+      "color": "#FFFFFF"
     },
     "elements": [
       {
         "id": "logo-group",
         "type": "group",
         "position": {
-          "topPercent": 38,
-          "leftPercent": 71.875
+          "topPercent": 25.185185185185187,
+          "leftPx": 959
         },
         "children": [
           {
@@ -83,7 +89,7 @@
             "component": "AshleyHouseIcon",
             "props": {
               "color": "#E87722",
-              "height": 120
+              "height": 151
             }
           },
           {
@@ -92,13 +98,13 @@
             "component": "AshleyWordmark",
             "props": {
               "color": "#333333",
-              "height": 150
+              "height": 110
             }
           }
         ],
         "layout": {
-          "direction": "row",
-          "gap": 25,
+          "direction": "column",
+          "gap": 20,
           "alignItems": "center"
         }
       },
@@ -109,8 +115,8 @@
         "propName": "locations",
         "position": {
           "belowElement": "logo-group",
-          "marginTop": 40,
-          "leftPercent": 56.25
+          "marginTop": 52,
+          "leftPx": 960
         },
         "layout": {
           "direction": "row",
@@ -121,7 +127,7 @@
           "type": "group",
           "layout": {
             "direction": "column",
-            "gap": 8,
+            "gap": 15,
             "alignItems": "flex-start"
           },
           "children": [
@@ -129,39 +135,39 @@
               "id": "address",
               "type": "text",
               "propPath": "address",
-              "content": "Street Address",
               "style": {
                 "fontFamily": "Chesna Grotesk",
                 "fontSize": 64,
                 "fontWeight": 600,
                 "color": "#333333",
-                "letterSpacing": 0
+                "letterSpacing": 0,
+                "textAlign": "left"
               }
             },
             {
               "id": "city",
               "type": "text",
               "propPath": "city",
-              "content": "City, State Zip",
               "style": {
                 "fontFamily": "Chesna Grotesk",
                 "fontSize": 64,
                 "fontWeight": 600,
                 "color": "#333333",
-                "letterSpacing": 0
+                "letterSpacing": 0,
+                "textAlign": "left"
               }
             },
             {
               "id": "phone",
               "type": "text",
               "propPath": "phone",
-              "content": "(000) 000-0000",
               "style": {
                 "fontFamily": "Chesna Grotesk",
                 "fontSize": 64,
                 "fontWeight": 600,
                 "color": "#333333",
-                "letterSpacing": 0
+                "letterSpacing": 0,
+                "textAlign": "left"
               }
             }
           ]
@@ -174,7 +180,7 @@
           "logo-group"
         ],
         "type": "fade-in",
-        "startFrame": 12,
+        "startFrame": 3,
         "postEffect": null
       },
       {
@@ -182,17 +188,23 @@
           "locations"
         ],
         "type": "fade-in",
-        "startFrame": 18,
+        "startFrame": 9,
         "postEffect": null
       }
     ],
     "textContent": {
       "tagline": null,
       "disclaimer": null,
-      "locations": []
+      "locations": [
+        {
+          "address": "Street Address",
+          "city": "City, State Zip",
+          "phone": "(000) 000-0000"
+        }
+      ]
     },
-    "notes": "The location information is presented as placeholder text. Per instructions, the dynamic 'locations' group structure is used, but the textContent.locations array is empty because the visible text is a generic placeholder."
+    "notes": "The placeholder text is being treated as a single location for the purpose of populating textContent, but the array structure is maintained for dynamic data."
   },
   "hasPreview": true,
-  "createdAt": "2026-03-20T14:39:45.540Z"
+  "createdAt": "2026-03-28T13:59:12.957Z"
 }

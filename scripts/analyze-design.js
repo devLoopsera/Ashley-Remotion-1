@@ -109,6 +109,14 @@ Any group element that shows store location information (address, city, state, z
 - The propPath for the city/state line MUST always be exactly "city" — never "cityStateZip", "cityState", "location", or any other name
 - ALSO populate textContent.locations with the ACTUAL text you can read from the image. For each store location visible, add: { "city": "EXACT CITY TEXT AS SHOWN", "address": "EXACT STREET ADDRESS AS SHOWN" }. If text is unreadable use [] — but NEVER use generic placeholders like "City Name" or "Street Address" in textContent.locations.
 
+## HORIZONTAL POSITIONING — CRITICAL
+Measure where the content sits horizontally on the 1920px-wide canvas:
+- If ALL visible content (logo, text, locations) is centered on the full canvas width → use "centerHorizontal": true
+- If content is offset to the RIGHT side (left edge of content block > ~900px) → use "leftPx": <measured left pixel position> instead of "centerHorizontal". Common for end cards with a product photo on the left and text on the right.
+- If content is offset to the LEFT side → use "leftPx": <measured left pixel position>
+- NEVER use "centerHorizontal": true when content clearly occupies only one side of the frame
+- Apply the same horizontal positioning to ALL elements in the same content block (logo-group AND locations should share the same leftPx if they're aligned)
+
 ## Return ONLY valid JSON. No markdown, no explanation.
 
 The schema below is a TEMPLATE showing possible elements — only include the ones actually visible:
@@ -126,7 +134,7 @@ The schema below is a TEMPLATE showing possible elements — only include the on
     {
       "id": "logo-group",
       "type": "group",
-      "position": { "topPercent": <0-100, measure where the logo sits vertically>, "centerHorizontal": true },
+      "position": { "topPercent": <0-100, measure where the logo sits vertically>, "centerHorizontal": true OR "leftPx": <measured pixel position if not centered> },
       "children": [
         {
           "id": "logo-icon",
@@ -164,7 +172,7 @@ The schema below is a TEMPLATE showing possible elements — only include the on
       "type": "group",
       "isArrayProp": true,
       "propName": "locations",
-      "position": { "bottomPx": <measure distance from bottom edge>, "centerHorizontal": true },
+      "position": { "belowElement": "logo-group" OR "bottomPx": <measure distance from bottom edge>, "marginTop": <gap below previous element>, "centerHorizontal": true OR "leftPx": <measured pixel position if not centered> },
       "layout": { "direction": "row", "gap": <measure actual gap between locations>, "alignItems": "flex-start" },
       "itemTemplate": {
         "children": [
@@ -253,6 +261,7 @@ Some Ashley end screens show the house icon being drawn as a stroke outline (lin
 - Letters appear to come from outside their resting positions, converging inward
 - The animation takes 2–4 seconds and covers most of the screen
 If you see this pattern on the logo or logo-group element, report it as type: "logo-reveal" (not "fade-in") and set postEffect: null.
+The logo-reveal animation has 8 internal phases over ~5 seconds: (1) horizontal line extends, (2) left wall draws up, (3) roof draws across, (4) right wall draws down, (5) line retracts, (6) ASHLEY letters rise and disperse inward, (7) tagline bar expands, (8) house icon pulses. It is handled entirely by the AshleyLogoReveal component — no per-element spring/interpolate needed.
 
 ---
 
@@ -283,7 +292,7 @@ After the </description> tag, return a JSON array. For each element (or group of
 - "slide-in-left" — element moves from LEFT to RIGHT into its final position while fading in. Look for horizontal position shifting between frames.
 - "slide-in-right" — element moves from RIGHT to LEFT into its final position while fading in. Look for horizontal position shifting between frames.
 - "scale-in" — element grows from small/invisible to full size.
-- "logo-reveal" — full choreographed logo draw animation (house stroke draw + letter disperse). ONLY for the logo or logo-group element. When this type is used, the code generator will replace the logo with AshleyLogoReveal component.
+- "logo-reveal" — full choreographed logo draw animation (house stroke draw + letter disperse + tagline expand + icon pulse). ONLY for the logo or logo-group element. When this type is used, the code generator will replace the logo with AshleyLogoReveal component. Reference template: LogoValidation (150 frames, 8-phase animation).
 
 ### How to distinguish fade-in from slide animations
 Compare the element's position across consecutive frames where it first appears:

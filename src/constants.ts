@@ -17,5 +17,3 @@ export const SCENE_TIMING = {
   scene3: {from: 165, duration: 90},    // 5.5s - 8.5s
   scene4: {from: 255, duration: 45},    // 8.5s - 10.0s
 } as const;
-
-export const VIDEO_SRC = "product-video-16x9-1770316835832.mp4";

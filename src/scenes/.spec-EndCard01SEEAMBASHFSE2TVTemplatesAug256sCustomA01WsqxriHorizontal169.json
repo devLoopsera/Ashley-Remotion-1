@@ -1,19 +1,19 @@
 {
-  "durationFrames": 66,
+  "durationFrames": 70,
   "fps": 30,
   "width": 1920,
   "height": 1080,
   "background": {
     "type": "solid",
-    "color": "#F9F9F9"
+    "color": "#F3F3F3"
   },
   "elements": [
     {
       "id": "logo-group",
       "type": "group",
       "position": {
-        "topPercent": 38,
-        "leftPercent": 71.875
+        "topPercent": 27,
+        "centerHorizontal": true
       },
       "children": [
         {
@@ -22,7 +22,7 @@
           "component": "AshleyHouseIcon",
           "props": {
             "color": "#E87722",
-            "height": 120
+            "height": 135
           }
         },
         {
@@ -31,12 +31,12 @@
           "component": "AshleyWordmark",
           "props": {
             "color": "#333333",
-            "height": 150
+            "height": 115
           }
         }
       ],
       "layout": {
-        "direction": "row",
+        "direction": "column",
         "gap": 25,
         "alignItems": "center"
       }
@@ -48,8 +48,8 @@
       "propName": "locations",
       "position": {
         "belowElement": "logo-group",
-        "marginTop": 40,
-        "leftPercent": 56.25
+        "marginTop": 45,
+        "centerHorizontal": true
       },
       "layout": {
         "direction": "row",
@@ -60,47 +60,33 @@
         "type": "group",
         "layout": {
           "direction": "column",
-          "gap": 8,
-          "alignItems": "flex-start"
+          "gap": 10,
+          "alignItems": "center"
         },
         "children": [
           {
             "id": "address",
             "type": "text",
             "propPath": "address",
-            "content": "Street Address",
             "style": {
               "fontFamily": "Chesna Grotesk",
-              "fontSize": 64,
+              "fontSize": 68,
               "fontWeight": 600,
               "color": "#333333",
-              "letterSpacing": 0
+              "textAlign": "center"
             }
           },
           {
             "id": "city",
             "type": "text",
             "propPath": "city",
-            "content": "City, State Zip",
             "style": {
               "fontFamily": "Chesna Grotesk",
-              "fontSize": 64,
+              "fontSize": 68,
               "fontWeight": 600,
               "color": "#333333",
-              "letterSpacing": 0
-            }
-          },
-          {
-            "id": "phone",
-            "type": "text",
-            "propPath": "phone",
-            "content": "(000) 000-0000",
-            "style": {
-              "fontFamily": "Chesna Grotesk",
-              "fontSize": 64,
-              "fontWeight": 600,
-              "color": "#333333",
-              "letterSpacing": 0
+              "textAlign": "center",
+              "lineHeight": 1.2
             }
           }
         ]
@@ -113,7 +99,7 @@
         "logo-group"
       ],
       "type": "fade-in",
-      "startFrame": 12,
+      "startFrame": 3,
       "postEffect": null
     },
     {
@@ -121,14 +107,19 @@
         "locations"
       ],
       "type": "fade-in",
-      "startFrame": 18,
+      "startFrame": 9,
       "postEffect": null
     }
   ],
   "textContent": {
     "tagline": null,
     "disclaimer": null,
-    "locations": []
+    "locations": [
+      {
+        "address": "Street Address",
+        "city": "City, State Zip\n(000) 000-0000"
+      }
+    ]
   },
-  "notes": "The location information is presented as placeholder text. Per instructions, the dynamic 'locations' group structure is used, but the textContent.locations array is empty because the visible text is a generic placeholder."
+  "notes": "The location information is presented as three lines. To comply with the mandated 'address' and 'city' propPaths, the last two lines ('City, State Zip' and the phone number) are combined into the 'city' prop with a newline character."
 }

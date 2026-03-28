@@ -694,11 +694,59 @@ app.get("/api/template-fields/:componentName", (req, res) => {
   res.json({fields});
 });
 
+// ── Generate template metadata on demand ─────────────────────────────────
+app.get("/api/template-metadata/:componentName", async (req, res) => {
+  const {componentName} = req.params;
+  const specFile = path.join(SCENES_DIR, `.spec-${componentName}.json`);
+  if (!fs.existsSync(specFile)) {
+    return res.status(404).json({error: `Spec not found for "${componentName}"`});
+  }
+  const spec = JSON.parse(fs.readFileSync(specFile, "utf8"));
+  const meta = await generateTemplateMetadata(spec);
+  if (meta) {
+    res.json(meta);
+  } else {
+    res.json({title: componentName, description: ""});
+  }
+});
+
 // ── Template categories ──────────────────────────────────────────────────
 const TEMPLATE_CATEGORIES = ["promo", "tutorial", "vlog", "brand", "event", "seasonal", "other"];
 
+// ── Auto-generate template title & description via Gemini ───────────────
+async function generateTemplateMetadata(spec) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return null;
+  try {
+    const {GoogleGenerativeAI} = require("@google/generative-ai");
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({model: "gemini-2.0-flash"});
+    const prompt = `Given this design spec for an Ashley Furniture end card, generate a short human-readable title and description.
+
+Spec summary:
+- Background: ${spec.background?.type === "image" ? "image" : spec.background?.color || "unknown"}
+- Elements: ${(spec.elements || []).map(e => e.id).join(", ")}
+- Animations: ${(spec.animations || []).map(a => `${a.targets.join("+")}:${a.type}`).join(", ") || "none"}
+- Text content: ${JSON.stringify(spec.textContent || {})}
+- Dimensions: ${spec.width}x${spec.height}
+
+Rules:
+- Title: 3-8 words, descriptive of the visual style/layout (e.g. "Dark Bedroom End Card with Slide-Up Locations", "Orange Logo Reveal on White Background"). Do NOT include "Ashley" in the title.
+- Description: 1-2 sentences describing the template's visual style, animation, and use case.
+- Return ONLY a JSON object: {"title": "...", "description": "..."}
+- No markdown fences, no explanation.`;
+
+    const result = await model.generateContent(prompt);
+    const text = result.response.text().trim().replace(/^```json?\n?/, "").replace(/\n?```$/, "");
+    return JSON.parse(text);
+  } catch (e) {
+    console.warn("Auto-generate template metadata failed:", e.message);
+    return null;
+  }
+}
+
 // ── Save as template ────────────────────────────────────────────────────
-app.post("/api/save-template", (req, res) => {
+app.post("/api/save-template", async (req, res) => {
   const {componentName, templateName, customizableFields, displayName, category, description} = req.body || {};
 
   if (!componentName || !/^[A-Z][A-Za-z0-9]*$/.test(componentName)) {
@@ -774,12 +822,42 @@ app.post("/api/save-template", (req, res) => {
     }
   }
 
+  // Copy the latest Remotion-rendered video to the template folder as the preview
+  if (fs.existsSync(OUT_DIR)) {
+    const renderedFiles = fs.readdirSync(OUT_DIR)
+      .filter(f => f.startsWith(componentName) && (f.endsWith(".mp4") || f.endsWith(".webm")))
+      .map(f => ({name: f, mtime: fs.statSync(path.join(OUT_DIR, f)).mtimeMs}))
+      .sort((a, b) => b.mtime - a.mtime);
+    if (renderedFiles.length > 0) {
+      const latest = renderedFiles[0];
+      const ext = path.extname(latest.name);
+      try {
+        fs.copyFileSync(path.join(OUT_DIR, latest.name), path.join(templateDir, `rendered${ext}`));
+        console.log(`[save-template] Saved rendered preview: rendered${ext}`);
+      } catch (err) {
+        console.error(`[save-template] Failed to copy rendered video: ${err.message}`);
+      }
+    }
+  }
+
+  // Auto-generate title & description if not provided by user
+  let finalDisplayName = displayName;
+  let finalDescription = description;
+  if (!finalDisplayName || !finalDescription) {
+    const autoMeta = await generateTemplateMetadata(spec);
+    if (autoMeta) {
+      if (!finalDisplayName) finalDisplayName = autoMeta.title;
+      if (!finalDescription) finalDescription = autoMeta.description;
+      console.log(`[save-template] Auto-generated metadata: "${autoMeta.title}"`);
+    }
+  }
+
   // Write template manifest
   const manifest = {
     name: safeName,
-    displayName: displayName || safeName,
+    displayName: finalDisplayName || safeName,
     category: TEMPLATE_CATEGORIES.includes(category) ? category : "other",
-    description: description || "",
+    description: finalDescription || "",
     sourceComponent: componentName,
     variables,
     designFields,
@@ -808,10 +886,13 @@ app.get("/api/templates", (_req, res) => {
       for (const ext of [".png", ".jpg", ".jpeg", ".webp"]) {
         if (fs.existsSync(path.join(TEMPLATES_DIR, entry, `reference${ext}`))) { previewExt = ext; break; }
       }
-      // Find preview video
-      let videoExt = null;
-      for (const ext of [".mp4", ".mov"]) {
-        if (fs.existsSync(path.join(TEMPLATES_DIR, entry, `reference${ext}`))) { videoExt = ext; break; }
+      // Find preview video — prefer rendered output over reference
+      let videoFile = null;
+      for (const prefix of ["rendered", "reference"]) {
+        for (const ext of [".mp4", ".webm", ".mov"]) {
+          if (fs.existsSync(path.join(TEMPLATES_DIR, entry, `${prefix}${ext}`))) { videoFile = `${prefix}${ext}`; break; }
+        }
+        if (videoFile) break;
       }
       templates.push({
         name: manifest.name,
@@ -822,7 +903,7 @@ app.get("/api/templates", (_req, res) => {
         variableCount: (manifest.variables || manifest.fields || []).length,
         hasPreview: !!previewExt,
         previewUrl: previewExt ? `/templates/${entry}/reference${previewExt}` : null,
-        videoUrl: videoExt ? `/templates/${entry}/reference${videoExt}` : null,
+        videoUrl: videoFile ? `/templates/${entry}/${videoFile}` : null,
         createdAt: manifest.createdAt,
       });
     } catch {}
@@ -911,7 +992,7 @@ app.get("/api/templates/:name", (req, res) => {
     manifest.designFields = manifest.fields.filter(f => !f.id.startsWith("prop:"));
   }
 
-  // Find preview
+  // Find preview image
   let previewUrl = null;
   for (const ext of [".png", ".jpg", ".jpeg", ".webp"]) {
     if (fs.existsSync(path.join(TEMPLATES_DIR, name, `reference${ext}`))) {
@@ -920,7 +1001,34 @@ app.get("/api/templates/:name", (req, res) => {
     }
   }
 
-  res.json({...manifest, previewUrl});
+  // Find preview video — prefer rendered output over reference
+  let videoUrl = null;
+  for (const prefix of ["rendered", "reference"]) {
+    for (const ext of [".mp4", ".webm", ".mov"]) {
+      if (fs.existsSync(path.join(TEMPLATES_DIR, name, `${prefix}${ext}`))) {
+        videoUrl = `/templates/${name}/${prefix}${ext}`;
+        break;
+      }
+    }
+    if (videoUrl) break;
+  }
+
+  res.json({...manifest, previewUrl, videoUrl});
+});
+
+// ── Update template metadata ─────────────────────────────────────────
+app.patch("/api/templates/:name", express.json(), (req, res) => {
+  const {name} = req.params;
+  const manifestPath = path.join(TEMPLATES_DIR, name, "template.json");
+  if (!fs.existsSync(manifestPath)) {
+    return res.status(404).json({error: `Template "${name}" not found`});
+  }
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  const {displayName, description} = req.body;
+  if (typeof displayName === "string") manifest.displayName = displayName;
+  if (typeof description === "string") manifest.description = description;
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+  res.json({ok: true});
 });
 
 // ── Render from template (single) ───────────────────────────────────────
@@ -952,6 +1060,45 @@ function ensureTemplateComponent(templateName, manifest) {
     registerInRoot(manifest.sourceComponent, manifest.spec);
     console.log(`Registered ${manifest.sourceComponent} in Root.tsx`);
   }
+}
+
+/** Inject ScaleWrapper around the component's return for non-16:9 aspect ratios */
+function injectScaleWrapper(componentPath, cropX = 50, cropY = 50) {
+  let code = fs.readFileSync(componentPath, "utf8");
+
+  // Skip if already injected
+  if (code.includes("ScaleWrapper")) return;
+
+  // Add import for ScaleWrapper
+  const importLine = "import {ScaleWrapper} from '../components/ScaleWrapper';\n";
+  // Insert after the last import statement
+  const lastImportIdx = code.lastIndexOf("\nimport ");
+  if (lastImportIdx !== -1) {
+    const lineEnd = code.indexOf("\n", lastImportIdx + 1);
+    code = code.slice(0, lineEnd + 1) + importLine + code.slice(lineEnd + 1);
+  } else {
+    code = importLine + code;
+  }
+
+  // Extract background color from the component (look for backgroundColor in AbsoluteFill)
+  const bgMatch = code.match(/backgroundColor:\s*['"]([^'"]+)['"]/);
+  const bgColor = bgMatch ? bgMatch[1] : '#000000';
+
+  // Wrap: replace the outermost <AbsoluteFill with <ScaleWrapper ...><AbsoluteFill
+  const wrapperProps = `background="${bgColor}" cropX={${cropX}} cropY={${cropY}}`;
+  code = code.replace(
+    /(\breturn\s*\(\s*)<AbsoluteFill/,
+    `$1<ScaleWrapper ${wrapperProps}><AbsoluteFill`
+  );
+  // Find the last </AbsoluteFill> before the closing of the return
+  const closingPattern = /<\/AbsoluteFill>\s*\)/g;
+  let match, lastMatch;
+  while ((match = closingPattern.exec(code)) !== null) lastMatch = match;
+  if (lastMatch) {
+    code = code.slice(0, lastMatch.index) + '</AbsoluteFill></ScaleWrapper>' + code.slice(lastMatch.index + lastMatch[0].length - 1);
+  }
+
+  fs.writeFileSync(componentPath, code);
 }
 
 /** Apply design overrides (background, logo, font) by patching the component TSX code */
@@ -1066,7 +1213,7 @@ function applyDesignOverrides(componentPath, manifest, designOverrides) {
 }
 
 app.post("/api/render-from-template", (req, res) => {
-  const {templateName, variables: values, designOverrides} = req.body || {};
+  const {templateName, variables: values, designOverrides, width, height, aspectRatio, cropX, cropY} = req.body || {};
   if (!templateName) return res.status(400).json({error: "templateName required"});
 
   const manifestPath = path.join(TEMPLATES_DIR, templateName, "template.json");
@@ -1091,19 +1238,28 @@ app.post("/api/render-from-template", (req, res) => {
         applyDesignOverrides(componentPath, manifest, designOverrides);
       }
 
+      // Inject ScaleWrapper for non-default aspect ratios
+      const needsScale = width && height && (width !== 1920 || height !== 1080);
+      if (needsScale) {
+        send({type: "log", text: `Cropping to ${aspectRatio || width+'x'+height}...`});
+        injectScaleWrapper(componentPath, cropX ?? 50, cropY ?? 50);
+      }
+
       const props = buildPropsFromVariables(vars, values || {});
       if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, {recursive: true});
 
       const timestamp = Date.now();
       const isTransparent = designOverrides && designOverrides.backgroundType === "transparent";
       const outputExt = isTransparent ? ".webm" : ".mp4";
-      const outputFile = `${manifest.sourceComponent}_${timestamp}${outputExt}`;
+      const arLabel = aspectRatio && aspectRatio !== '16:9' ? `_${aspectRatio.replace(':', 'x')}` : '';
+      const outputFile = `${manifest.sourceComponent}${arLabel}_${timestamp}${outputExt}`;
       const outputPath = path.join(OUT_DIR, outputFile);
       const propsFile = path.join(TMP_DIR, `.props-${timestamp}.json`);
       fs.writeFileSync(propsFile, JSON.stringify(props));
 
       const codecFlags = isTransparent ? ' --codec=vp8 --image-format=png' : '';
-      const cmd = `npx remotion render src/index.ts ${manifest.sourceComponent} "${outputPath.replace(/\\/g, "/")}" --props="${propsFile.replace(/\\/g, "/")}"${codecFlags}`;
+      const dimFlags = needsScale ? ` --width=${width} --height=${height}` : '';
+      const cmd = `npx remotion render src/index.ts ${manifest.sourceComponent} "${outputPath.replace(/\\/g, "/")}" --props="${propsFile.replace(/\\/g, "/")}"${codecFlags}${dimFlags}`;
       send({type: "log", text: `Rendering ${isTransparent ? 'transparent WebM' : 'video'} with Remotion...`});
 
       await new Promise((resolve, reject) => {
@@ -1134,7 +1290,7 @@ app.post("/api/bulk-cancel", (_req, res) => {
 });
 
 app.post("/api/bulk-render", (req, res) => {
-  const {templateName, rows, designOverrides} = req.body || {};
+  const {templateName, rows, designOverrides, width, height, aspectRatio, cropX, cropY} = req.body || {};
   if (!templateName) return res.status(400).json({error: "templateName required"});
   if (!Array.isArray(rows) || rows.length === 0) return res.status(400).json({error: "rows array required"});
 
@@ -1149,6 +1305,7 @@ app.post("/api/bulk-render", (req, res) => {
   const send = (data) => res.write(`data: ${JSON.stringify(data)}\n\n`);
 
   bulkCancelFlag = false;
+  const bulkNeedsScale = width && height && (width !== 1920 || height !== 1080);
 
   (async () => {
     try {
@@ -1156,16 +1313,24 @@ app.post("/api/bulk-render", (req, res) => {
       ensureTemplateComponent(templateName, manifest);
 
       // Apply design overrides once for all rows
+      const componentPath = path.join(SCENES_DIR, `Generated_${manifest.sourceComponent}.tsx`);
       if (designOverrides && Object.keys(designOverrides).length > 0) {
-        const componentPath = path.join(SCENES_DIR, `Generated_${manifest.sourceComponent}.tsx`);
         send({type: "log", text: "Applying design overrides..."});
         applyDesignOverrides(componentPath, manifest, designOverrides);
+      }
+
+      // Inject ScaleWrapper for non-default aspect ratios
+      if (bulkNeedsScale) {
+        send({type: "log", text: `Cropping to ${aspectRatio || width+'x'+height}...`});
+        injectScaleWrapper(componentPath, cropX ?? 50, cropY ?? 50);
       }
 
       if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, {recursive: true});
 
       const files = [];
       const total = rows.length;
+      const bulkDimFlags = bulkNeedsScale ? ` --width=${width} --height=${height}` : '';
+      const bulkArLabel = aspectRatio && aspectRatio !== '16:9' ? `_${aspectRatio.replace(':', 'x')}` : '';
 
       for (let i = 0; i < total; i++) {
         if (bulkCancelFlag) {
@@ -1178,13 +1343,13 @@ app.post("/api/bulk-render", (req, res) => {
         const timestamp = Date.now();
         const bulkIsTransparent = designOverrides && designOverrides.backgroundType === "transparent";
         const bulkExt = bulkIsTransparent ? ".webm" : ".mp4";
-        const outputFile = `${manifest.sourceComponent}_batch_${i + 1}_${timestamp}${bulkExt}`;
+        const outputFile = `${manifest.sourceComponent}${bulkArLabel}_batch_${i + 1}_${timestamp}${bulkExt}`;
         const outputPath = path.join(OUT_DIR, outputFile);
         const propsFile = path.join(TMP_DIR, `.props-bulk-${timestamp}.json`);
         fs.writeFileSync(propsFile, JSON.stringify(props));
 
         const bulkCodecFlags = bulkIsTransparent ? ' --codec=vp8 --image-format=png' : '';
-        const cmd = `npx remotion render src/index.ts ${manifest.sourceComponent} "${outputPath.replace(/\\/g, "/")}" --props="${propsFile.replace(/\\/g, "/")}"${bulkCodecFlags}`;
+        const cmd = `npx remotion render src/index.ts ${manifest.sourceComponent} "${outputPath.replace(/\\/g, "/")}" --props="${propsFile.replace(/\\/g, "/")}"${bulkCodecFlags}${bulkDimFlags}`;
 
         try {
           await new Promise((resolve, reject) => {

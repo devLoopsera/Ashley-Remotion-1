@@ -2233,11 +2233,26 @@
 
       try {
         templateNameInput.value = currentComponentName;
-        const resp = await fetch(`/api/template-fields/${currentComponentName}`);
-        const data = await resp.json();
-        if (!resp.ok) throw new Error(data.error || 'Failed to load fields');
+        document.getElementById('template-display-name').value = '';
+        document.getElementById('template-description').value = '';
+
+        // Load fields and auto-generate metadata in parallel
+        const [fieldsResp, metaResp] = await Promise.all([
+          fetch(`/api/template-fields/${currentComponentName}`),
+          fetch(`/api/template-metadata/${currentComponentName}`).catch(() => null),
+        ]);
+        const data = await fieldsResp.json();
+        if (!fieldsResp.ok) throw new Error(data.error || 'Failed to load fields');
         templateFields = data.fields;
         renderTemplateFields(templateFields);
+
+        // Auto-fill title and description from Gemini
+        if (metaResp && metaResp.ok) {
+          const meta = await metaResp.json();
+          if (meta.title) document.getElementById('template-display-name').value = meta.title;
+          if (meta.description) document.getElementById('template-description').value = meta.description;
+        }
+
         templateModal.classList.add('visible');
       } catch (e) {
         console.error('[save-template] error:', e);
@@ -2345,7 +2360,7 @@
             componentName: currentComponentName,
             templateName: name,
             customizableFields: selectedFields,
-            displayName: document.getElementById('template-display-name').value.trim() || name,
+            displayName: document.getElementById('template-display-name').value.trim() || "",
             category: document.getElementById('template-category').value,
             description: document.getElementById('template-description').value.trim(),
           }),

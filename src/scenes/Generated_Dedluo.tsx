@@ -2,11 +2,13 @@ import React from 'react';
 import {
   AbsoluteFill,
   spring,
+  interpolate,
   useCurrentFrame,
   useVideoConfig,
 } from 'remotion';
 import {AshleyHouseIcon, AshleyWordmark} from '../components/logo';
 import {CHESNA, useFonts} from '../loadFonts';
+import {ScaleWrapper} from '../components/ScaleWrapper';
 
 export type DedluoProps = {
   tagline: string;
@@ -32,8 +34,16 @@ export const Dedluo: React.FC<DedluoProps> = ({
     config: {damping: 12, mass: 0.5},
   });
 
+  // House icon pulse after fade-in
+  const pulseProgress = spring({
+    frame: frame - 32,
+    fps,
+    config: {damping: 8, mass: 0.6},
+  });
+  const pulseScale = interpolate(pulseProgress, [0, 0.5, 1], [1.0, 1.45, 1.0]);
+
   return (
-    <AbsoluteFill style={{backgroundColor: '#382A22'}}>
+    <ScaleWrapper background="#382A22"><AbsoluteFill style={{backgroundColor: '#382A22'}}>
       <div
         style={{
           position: 'absolute',
@@ -55,7 +65,9 @@ export const Dedluo: React.FC<DedluoProps> = ({
             gap: 23,
           }}
         >
-          <AshleyHouseIcon color="#FFFFFF" height={90.24} />
+          <div style={{transform: `scale(${pulseScale})`}}>
+            <AshleyHouseIcon color="#FFFFFF" height={90.24} />
+          </div>
           <AshleyWordmark color="#FFFFFF" height={96} />
         </div>
 
@@ -157,6 +169,5 @@ export const Dedluo: React.FC<DedluoProps> = ({
           {disclaimer}
         </p>
       </div>
-    </AbsoluteFill>
-  );
+    </AbsoluteFill></ScaleWrapper>);
 };

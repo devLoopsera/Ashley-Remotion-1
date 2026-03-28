@@ -1,0 +1,70 @@
+{
+  "durationFrames": 150,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "background": {
+    "type": "solid",
+    "color": "#1a1008"
+  },
+  "elements": [
+    {
+      "id": "logo-group",
+      "type": "group",
+      "position": {
+        "topPercent": 44,
+        "centerHorizontal": true
+      },
+      "children": [
+        {
+          "id": "logo-icon",
+          "type": "svg-component",
+          "component": "AshleyHouseIcon",
+          "props": { "color": "#FFFFFF", "height": 120 }
+        },
+        {
+          "id": "logo-wordmark",
+          "type": "svg-component",
+          "component": "AshleyWordmark",
+          "props": { "color": "#FFFFFF", "height": 120 }
+        }
+      ],
+      "layout": { "direction": "row", "gap": 40, "alignItems": "center" }
+    },
+    {
+      "id": "tagline",
+      "type": "text",
+      "content": "Shop More Deals In-Store",
+      "isTextProp": true,
+      "propName": "tagline",
+      "position": { "below": "logo-group", "centerHorizontal": true, "marginTop": 40 },
+      "style": { "fontFamily": "Chesna Grotesk", "fontSize": 28, "fontWeight": 400, "color": "#FFFFFF", "letterSpacing": 3, "textTransform": "uppercase", "textAlign": "center" }
+    },
+    {
+      "id": "locations",
+      "type": "locations",
+      "position": { "bottomPx": 100, "centerHorizontal": true },
+      "style": { "cityFontSize": 52, "cityFontWeight": 600, "addressFontSize": 38, "addressFontWeight": 400, "color": "#FFFFFF", "gap": 120 }
+    },
+    {
+      "id": "disclaimer",
+      "type": "text",
+      "content": "Ashley stores are independently owned and operated. ©2024 Rogers Furniture, DBA Ashley. All rights reserved. Furniture since 1945.",
+      "isTextProp": true,
+      "propName": "disclaimer",
+      "position": { "below": "locations", "centerHorizontal": true, "marginTop": 60 },
+      "style": { "fontFamily": "Chesna Grotesk", "fontSize": 20, "fontWeight": 400, "color": "rgba(255,255,255,0.45)", "letterSpacing": 0.3, "textAlign": "center" }
+    }
+  ],
+  "animations": [
+    { "targets": ["logo-group", "tagline", "locations", "disclaimer"], "type": "fade-in", "startFrame": 0, "postEffect": null },
+    { "targets": ["logo-icon"], "type": "fade-in", "startFrame": 0, "postEffect": "scale-throb" }
+  ],
+  "textContent": {
+    "tagline": "Shop More Deals In-Store",
+    "disclaimer": "Ashley stores are independently owned and operated. ©2024 Rogers Furniture, DBA Ashley. All rights reserved. Furniture since 1945.",
+    "locations": [
+      { "city": "City Name", "address": "Street Address" }
+    ]
+  }
+}

@@ -90,7 +90,26 @@
     .modal-close { position: absolute; top: 12px; right: 14px; background: none; border: none; color: rgba(255,255,255,0.3); font-size: 22px; cursor: pointer; }
     .modal-close:hover { color: #fff; }
     .detail-preview { width: 100%; border-radius: 8px; margin-bottom: 16px; }
-    .detail-name { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+    .preview-container { position: relative; width: 100%; margin-bottom: 16px; border-radius: 8px; overflow: hidden; }
+    .preview-container video, .preview-container img { width: 100%; display: block; border-radius: 8px; }
+    .crop-overlay { display: none; position: absolute; inset: 0; pointer-events: none; }
+    .crop-overlay.visible { display: block; }
+    .crop-guide {
+      position: absolute; border: 2px solid rgba(232,119,34,0.9); box-shadow: 0 0 0 9999px rgba(0,0,0,0.55);
+      cursor: grab; pointer-events: auto; border-radius: 4px;
+      transition: width 0.2s, height 0.2s;
+    }
+    .crop-guide:active { cursor: grabbing; }
+    .crop-guide-label {
+      position: absolute; bottom: 6px; right: 8px; font-size: 10px; font-weight: 600;
+      color: rgba(232,119,34,0.9); background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 3px;
+      pointer-events: none; letter-spacing: 0.5px;
+    }
+    .detail-name { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 4px; display: none; }
+    .detail-name-input { font-size: 18px; font-weight: 700; color: #fff; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 6px 10px; width: 100%; margin-bottom: 4px; outline: none; font-family: inherit; }
+    .detail-name-input:focus { border-color: rgba(232,119,34,0.5); }
+    .detail-desc-input { font-size: 13px; color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 6px 10px; width: 100%; margin-bottom: 8px; outline: none; font-family: inherit; resize: vertical; min-height: 32px; }
+    .detail-desc-input:focus { border-color: rgba(232,119,34,0.5); }
     .detail-meta { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
     .detail-desc { font-size: 12px; color: rgba(255,255,255,0.4); line-height: 1.5; margin-bottom: 18px; }
     .detail-section-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 10px; }
@@ -146,6 +165,19 @@
     .bg-type-tab.active { background: rgba(255,165,0,0.12); color: rgba(255,165,0,0.85); }
     .bg-type-panel { display: none; }
     .bg-type-panel.visible { display: block; }
+
+    /* ── Aspect ratio selector ── */
+    .ar-tabs { display: flex; gap: 0; margin-bottom: 10px; border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.12); }
+    .ar-tab {
+      flex: 1; padding: 8px 10px; font-size: 11px; letter-spacing: 0.5px; text-align: center;
+      background: rgba(255,255,255,0.03); border: none; color: rgba(255,255,255,0.35); cursor: pointer;
+      transition: all 0.15s; border-right: 1px solid rgba(255,255,255,0.08);
+    }
+    .ar-tab:last-child { border-right: none; }
+    .ar-tab:hover { color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.06); }
+    .ar-tab.active { background: rgba(255,165,0,0.12); color: rgba(255,165,0,0.85); }
+    .ar-tab .ar-label { display: block; font-weight: 600; }
+    .ar-tab .ar-size { display: block; font-size: 9px; opacity: 0.5; margin-top: 2px; }
     .bg-upload-btn {
       font-size: 11px; color: rgba(255,255,255,0.4); background: none;
       border: 1px dashed rgba(255,255,255,0.15); border-radius: 6px;
@@ -262,19 +294,35 @@
   <div class="detail-overlay" id="detail-overlay">
     <div class="detail-modal">
       <button class="modal-close" id="detail-close">&times;</button>
-      <img class="detail-preview" id="detail-preview" alt="" style="display:none;" />
-      <div class="detail-name" id="detail-name"></div>
+      <div class="preview-container" id="preview-container">
+        <video class="detail-preview" id="detail-video" autoplay loop muted playsinline style="display:none;"></video>
+        <img class="detail-preview" id="detail-preview" alt="" style="display:none;" />
+        <div class="crop-overlay" id="crop-overlay">
+          <div class="crop-guide" id="crop-guide">
+            <div class="crop-guide-label" id="crop-guide-label"></div>
+          </div>
+        </div>
+      </div>
+      <input class="detail-name-input" id="detail-name-input" type="text" placeholder="Template title" />
       <div class="detail-meta">
         <span class="tpl-card-badge" id="detail-category"></span>
         <span class="tpl-card-info" id="detail-var-count"></span>
       </div>
-      <div class="detail-desc" id="detail-desc"></div>
+      <textarea class="detail-desc-input" id="detail-desc-input" rows="2" placeholder="Description (optional)"></textarea>
 
       <div class="detail-section-label">Variables</div>
       <div id="detail-vars"></div>
 
       <div class="detail-section-label" style="margin-top:18px;">Design Overrides <span style="font-size:9px;color:rgba(255,255,255,0.2);text-transform:none;letter-spacing:0;">(optional)</span></div>
       <div id="detail-design-fields"></div>
+
+      <div class="detail-section-label" style="margin-top:18px;">Aspect Ratio</div>
+      <div class="ar-tabs" id="detail-aspect-ratio">
+        <button class="ar-tab active" data-ar="16:9" data-w="1920" data-h="1080"><span class="ar-label">16:9</span><span class="ar-size">1920×1080</span></button>
+        <button class="ar-tab" data-ar="9:16" data-w="1080" data-h="1920"><span class="ar-label">9:16</span><span class="ar-size">1080×1920</span></button>
+        <button class="ar-tab" data-ar="1:1" data-w="1080" data-h="1080"><span class="ar-label">1:1</span><span class="ar-size">1080×1080</span></button>
+        <button class="ar-tab" data-ar="4:5" data-w="1080" data-h="1350"><span class="ar-label">4:5</span><span class="ar-size">1080×1350</span></button>
+      </div>
 
       <div class="detail-actions">
         <button class="btn-render-single" id="btn-render-single">Render End Card</button>
@@ -298,6 +346,16 @@
       <div class="modal-title">Bulk Generate End Cards</div>
       <div class="modal-sub" id="bulk-template-label"></div>
 
+      <div class="preview-container" id="bulk-preview-container" style="margin-bottom:14px;">
+        <video class="detail-preview" id="bulk-video" autoplay loop muted playsinline style="display:none;"></video>
+        <img class="detail-preview" id="bulk-preview-img" alt="" style="display:none;" />
+        <div class="crop-overlay" id="bulk-crop-overlay">
+          <div class="crop-guide" id="bulk-crop-guide">
+            <div class="crop-guide-label" id="bulk-crop-guide-label"></div>
+          </div>
+        </div>
+      </div>
+
       <div class="bulk-upload-zone" id="bulk-upload-zone">
         <input type="file" id="bulk-file-input" accept=".csv,.json" />
         <div class="bulk-upload-label">Drop a CSV or JSON file here, or click to browse</div>
@@ -320,6 +378,14 @@
 
       <div class="detail-section-label" style="margin-top:18px;">Design Overrides <span style="font-size:9px;color:rgba(255,255,255,0.2);text-transform:none;letter-spacing:0;">(applies to all rows)</span></div>
       <div id="bulk-design-fields"></div>
+
+      <div class="detail-section-label" style="margin-top:18px;">Aspect Ratio <span style="font-size:9px;color:rgba(255,255,255,0.2);text-transform:none;letter-spacing:0;">(applies to all rows)</span></div>
+      <div class="ar-tabs" id="bulk-aspect-ratio">
+        <button class="ar-tab active" data-ar="16:9" data-w="1920" data-h="1080"><span class="ar-label">16:9</span><span class="ar-size">1920×1080</span></button>
+        <button class="ar-tab" data-ar="9:16" data-w="1080" data-h="1920"><span class="ar-label">9:16</span><span class="ar-size">1080×1920</span></button>
+        <button class="ar-tab" data-ar="1:1" data-w="1080" data-h="1080"><span class="ar-label">1:1</span><span class="ar-size">1080×1080</span></button>
+        <button class="ar-tab" data-ar="4:5" data-w="1080" data-h="1350"><span class="ar-label">4:5</span><span class="ar-size">1080×1350</span></button>
+      </div>
 
       <div class="bulk-actions">
         <button class="btn-bulk-generate" id="btn-bulk-generate" disabled>Generate All</button>
@@ -459,14 +525,27 @@
         if (tpl.error) throw new Error(tpl.error);
         currentDetailTemplate = tpl;
 
+        const video = document.getElementById('detail-video');
         const preview = document.getElementById('detail-preview');
-        if (tpl.previewUrl) { preview.src = tpl.previewUrl; preview.style.display = 'block'; }
-        else preview.style.display = 'none';
+        if (tpl.videoUrl) {
+          video.src = tpl.videoUrl;
+          video.style.display = 'block';
+          preview.style.display = 'none';
+        } else if (tpl.previewUrl) {
+          preview.src = tpl.previewUrl;
+          preview.style.display = 'block';
+          video.style.display = 'none';
+          video.src = '';
+        } else {
+          preview.style.display = 'none';
+          video.style.display = 'none';
+          video.src = '';
+        }
 
-        document.getElementById('detail-name').textContent = tpl.displayName || tpl.name;
+        document.getElementById('detail-name-input').value = tpl.displayName || tpl.name;
         document.getElementById('detail-category').textContent = tpl.category || 'other';
         document.getElementById('detail-var-count').textContent = `${(tpl.variables || []).length} variables`;
-        document.getElementById('detail-desc').textContent = tpl.description || 'No description provided.';
+        document.getElementById('detail-desc-input').value = tpl.description || '';
 
         renderDetailVars(tpl.variables || []);
         renderDetailDesignFields(tpl.designFields || []);
@@ -476,11 +555,43 @@
         document.getElementById('btn-render-single').disabled = false;
         document.getElementById('btn-render-single').textContent = 'Render End Card';
 
+        // Reset aspect ratio to default 16:9 and hide crop guide
+        document.querySelectorAll('#detail-aspect-ratio .ar-tab').forEach(t => t.classList.toggle('active', t.dataset.ar === '16:9'));
+        cropGuidePos = {xPercent: 50, yPercent: 50};
+        document.getElementById('crop-overlay').classList.remove('visible');
+
         detailOverlay.classList.add('visible');
       } catch (e) {
         alert('Error loading template: ' + e.message);
       }
     }
+
+    // Auto-save title and description on blur
+    let _saveTimer = null;
+    function saveTemplateMetadata() {
+      if (!currentDetailTemplate) return;
+      clearTimeout(_saveTimer);
+      _saveTimer = setTimeout(async () => {
+        const displayName = document.getElementById('detail-name-input').value.trim();
+        const description = document.getElementById('detail-desc-input').value.trim();
+        try {
+          await fetch(`/api/templates/${currentDetailTemplate.name}`, {
+            method: 'PATCH',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({displayName, description}),
+          });
+          // Update the card in the grid
+          const idx = allTemplates.findIndex(t => t.name === currentDetailTemplate.name);
+          if (idx !== -1) {
+            allTemplates[idx].displayName = displayName;
+            allTemplates[idx].description = description;
+            applyFilters();
+          }
+        } catch (e) { /* silent */ }
+      }, 500);
+    }
+    document.getElementById('detail-name-input').addEventListener('input', saveTemplateMetadata);
+    document.getElementById('detail-desc-input').addEventListener('input', saveTemplateMetadata);
 
     function renderDetailVars(variables) {
       const container = document.getElementById('detail-vars');
@@ -769,6 +880,129 @@
       return values;
     }
 
+    // ── Aspect ratio tab switching + crop guide ─────────────────
+    let cropGuidePos = {xPercent: 50, yPercent: 50}; // center by default
+    let bulkCropGuidePos = {xPercent: 50, yPercent: 50};
+
+    document.querySelectorAll('.ar-tabs').forEach(tabs => {
+      tabs.addEventListener('click', (e) => {
+        const tab = e.target.closest('.ar-tab');
+        if (!tab) return;
+        tabs.querySelectorAll('.ar-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        if (tabs.id === 'detail-aspect-ratio') updateCropGuide('detail');
+        if (tabs.id === 'bulk-aspect-ratio') updateCropGuide('bulk');
+      });
+    });
+
+    function updateCropGuide(mode) {
+      const isDetail = mode === 'detail';
+      const overlay = document.getElementById(isDetail ? 'crop-overlay' : 'bulk-crop-overlay');
+      const guide = document.getElementById(isDetail ? 'crop-guide' : 'bulk-crop-guide');
+      const label = document.getElementById(isDetail ? 'crop-guide-label' : 'bulk-crop-guide-label');
+      const container = document.getElementById(isDetail ? 'preview-container' : 'bulk-preview-container');
+      const pos = isDetail ? cropGuidePos : bulkCropGuidePos;
+      const tabsId = isDetail ? 'detail-aspect-ratio' : 'bulk-aspect-ratio';
+      const dims = getSelectedDimensions(tabsId);
+
+      if (dims.aspectRatio === '16:9') {
+        overlay.classList.remove('visible');
+        return;
+      }
+
+      overlay.classList.add('visible');
+      label.textContent = dims.aspectRatio;
+
+      const containerW = container.offsetWidth;
+      const containerH = container.querySelector('video')?.offsetHeight || container.querySelector('img')?.offsetHeight || (containerW * 9 / 16);
+
+      const targetRatio = dims.width / dims.height;
+      const previewRatio = 16 / 9;
+
+      let guideW, guideH;
+      if (targetRatio >= previewRatio) {
+        guideW = containerW;
+        guideH = containerW / targetRatio;
+      } else {
+        guideH = containerH;
+        guideW = containerH * targetRatio;
+      }
+
+      guide.style.width = guideW + 'px';
+      guide.style.height = guideH + 'px';
+
+      const maxX = containerW - guideW;
+      const maxY = containerH - guideH;
+      const x = maxX * (pos.xPercent / 100);
+      const y = maxY * (pos.yPercent / 100);
+      guide.style.left = x + 'px';
+      guide.style.top = y + 'px';
+    }
+
+    // Draggable crop guides (detail + bulk)
+    function initCropGuideDrag(guideId, containerId, posObj) {
+      const guide = document.getElementById(guideId);
+      let dragging = false, startX, startY, startLeft, startTop;
+
+      guide.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        dragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        startLeft = parseInt(guide.style.left) || 0;
+        startTop = parseInt(guide.style.top) || 0;
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        const container = document.getElementById(containerId);
+        const containerW = container.offsetWidth;
+        const containerH = container.querySelector('video')?.offsetHeight || container.querySelector('img')?.offsetHeight || (containerW * 9 / 16);
+        const guideW = guide.offsetWidth;
+        const guideH = guide.offsetHeight;
+
+        const maxX = containerW - guideW;
+        const maxY = containerH - guideH;
+
+        let newX = startLeft + (e.clientX - startX);
+        let newY = startTop + (e.clientY - startY);
+        newX = Math.max(0, Math.min(maxX, newX));
+        newY = Math.max(0, Math.min(maxY, newY));
+
+        guide.style.left = newX + 'px';
+        guide.style.top = newY + 'px';
+
+        posObj.xPercent = maxX > 0 ? (newX / maxX) * 100 : 50;
+        posObj.yPercent = maxY > 0 ? (newY / maxY) * 100 : 50;
+      });
+
+      document.addEventListener('mouseup', () => { dragging = false; });
+    }
+    initCropGuideDrag('crop-guide', 'preview-container', cropGuidePos);
+    initCropGuideDrag('bulk-crop-guide', 'bulk-preview-container', bulkCropGuidePos);
+
+    function getSelectedDimensions(containerId) {
+      const container = document.getElementById(containerId);
+      const activeTab = container ? container.querySelector('.ar-tab.active') : null;
+      if (!activeTab) return {width: 1920, height: 1080, aspectRatio: '16:9'};
+      const dims = {
+        width: parseInt(activeTab.dataset.w, 10),
+        height: parseInt(activeTab.dataset.h, 10),
+        aspectRatio: activeTab.dataset.ar,
+      };
+      // Include crop position for non-16:9 ratios
+      if (dims.aspectRatio !== '16:9') {
+        if (containerId === 'detail-aspect-ratio') {
+          dims.cropX = cropGuidePos.xPercent;
+          dims.cropY = cropGuidePos.yPercent;
+        } else if (containerId === 'bulk-aspect-ratio') {
+          dims.cropX = bulkCropGuidePos.xPercent;
+          dims.cropY = bulkCropGuidePos.yPercent;
+        }
+      }
+      return dims;
+    }
+
     function collectDesignOverrides() { return collectDesignOverridesFrom('detail-design-fields'); }
 
     function collectDesignOverridesFrom(containerId) {
@@ -826,6 +1060,7 @@
             templateName: currentDetailTemplate.name,
             variables: collectDetailVarValues(),
             designOverrides: collectDesignOverrides(),
+            ...getSelectedDimensions('detail-aspect-ratio'),
           }),
         });
 
@@ -878,6 +1113,30 @@
       document.getElementById('btn-bulk-generate').disabled = false;
       document.getElementById('btn-bulk-generate').textContent = `Generate All (${bulkRows.length})`;
       document.getElementById('btn-bulk-cancel').style.display = 'none';
+
+      // Populate bulk preview from current detail template
+      const bulkVideo = document.getElementById('bulk-video');
+      const bulkImg = document.getElementById('bulk-preview-img');
+      if (currentDetailTemplate.videoUrl) {
+        bulkVideo.src = currentDetailTemplate.videoUrl;
+        bulkVideo.style.display = 'block';
+        bulkImg.style.display = 'none';
+      } else if (currentDetailTemplate.previewUrl) {
+        bulkImg.src = currentDetailTemplate.previewUrl;
+        bulkImg.style.display = 'block';
+        bulkVideo.style.display = 'none';
+        bulkVideo.src = '';
+      } else {
+        bulkVideo.style.display = 'none';
+        bulkImg.style.display = 'none';
+        bulkVideo.src = '';
+      }
+
+      // Reset aspect ratio to default 16:9 and crop guide
+      document.querySelectorAll('#bulk-aspect-ratio .ar-tab').forEach(t => t.classList.toggle('active', t.dataset.ar === '16:9'));
+      bulkCropGuidePos = {xPercent: 50, yPercent: 50};
+      document.getElementById('bulk-crop-overlay').classList.remove('visible');
+
       bulkOverlay.classList.add('visible');
     });
 
@@ -1140,7 +1399,7 @@
         const resp = await fetch('/api/bulk-render', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({templateName: currentBulkTemplate, rows: bulkRows, designOverrides: collectDesignOverridesFrom('bulk-design-fields')}),
+          body: JSON.stringify({templateName: currentBulkTemplate, rows: bulkRows, designOverrides: collectDesignOverridesFrom('bulk-design-fields'), ...getSelectedDimensions('bulk-aspect-ratio')}),
         });
         const reader = resp.body.getReader();
         const decoder = new TextDecoder();

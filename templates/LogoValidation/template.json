@@ -1,0 +1,174 @@
+{
+  "name": "LogoValidation",
+  "displayName": "Logo Reveal Animation",
+  "category": "brand",
+  "description": "Full Ashley logo reveal animation — house icon stroke draw, letter dispersion, tagline bar expand, and icon pulse. Use as a reference for logo-reveal animation type.",
+  "sourceComponent": "LogoValidation",
+  "variables": [
+    {
+      "id": "prop:tagline",
+      "category": "content",
+      "label": "Tagline",
+      "type": "text",
+      "defaultValue": "SHOP IN-STORE & ONLINE",
+      "customizable": true,
+      "name": "tagline",
+      "placeholder": "e.g. SHOP IN-STORE & ONLINE",
+      "required": false
+    },
+    {
+      "id": "prop:disclaimer",
+      "category": "content",
+      "label": "Disclaimer",
+      "type": "text",
+      "defaultValue": "© 2026 Ashley Global Retail, LLC. All rights reserved.",
+      "customizable": true,
+      "name": "disclaimer",
+      "placeholder": "e.g. © 2026 Ashley Global Retail, LLC. All rights reserved.",
+      "required": false
+    }
+  ],
+  "designFields": [
+    {
+      "id": "houseColor",
+      "category": "design",
+      "label": "House Icon Color",
+      "type": "color",
+      "defaultValue": "#E87722",
+      "customizable": true
+    },
+    {
+      "id": "wordmarkColor",
+      "category": "design",
+      "label": "Wordmark Color",
+      "type": "color",
+      "defaultValue": "#FFFFFF",
+      "customizable": true
+    },
+    {
+      "id": "taglineBarColor",
+      "category": "design",
+      "label": "Tagline Bar Color",
+      "type": "color",
+      "defaultValue": "#E87722",
+      "customizable": true
+    },
+    {
+      "id": "background",
+      "category": "design",
+      "label": "Background Color",
+      "type": "color",
+      "defaultValue": "#1a1a1a",
+      "customizable": true
+    }
+  ],
+  "spec": {
+    "durationFrames": 150,
+    "fps": 30,
+    "width": 1920,
+    "height": 1080,
+    "background": {
+      "type": "solid",
+      "color": "#1a1a1a"
+    },
+    "elements": [
+      {
+        "id": "logo-group",
+        "type": "group",
+        "position": {
+          "centerHorizontal": true,
+          "centerVertical": true
+        },
+        "children": [
+          {
+            "id": "logo-icon",
+            "type": "svg-component",
+            "component": "AshleyHouseIcon",
+            "props": {
+              "color": "#E87722",
+              "height": 120
+            }
+          },
+          {
+            "id": "logo-wordmark",
+            "type": "svg-component",
+            "component": "AshleyWordmark",
+            "props": {
+              "color": "#FFFFFF",
+              "height": 55
+            }
+          }
+        ],
+        "layout": {
+          "direction": "column",
+          "gap": 8,
+          "alignItems": "center"
+        }
+      },
+      {
+        "id": "tagline",
+        "type": "text",
+        "content": "SHOP IN-STORE & ONLINE",
+        "isTextProp": true,
+        "propName": "tagline",
+        "position": {
+          "below": "logo-group",
+          "centerHorizontal": true,
+          "marginTop": 18
+        },
+        "style": {
+          "fontSize": 16,
+          "fontWeight": 700,
+          "color": "#FFFFFF",
+          "letterSpacing": 3,
+          "backgroundColor": "#E87722",
+          "paddingTop": 10,
+          "paddingBottom": 10,
+          "paddingLeft": 36,
+          "paddingRight": 36,
+          "borderRadius": 3
+        }
+      },
+      {
+        "id": "disclaimer",
+        "type": "text",
+        "content": "© 2026 Ashley Global Retail, LLC. All rights reserved.",
+        "isTextProp": true,
+        "propName": "disclaimer",
+        "position": {
+          "bottomPx": 30,
+          "centerHorizontal": true
+        },
+        "style": {
+          "fontSize": 13,
+          "fontWeight": 400,
+          "color": "rgba(255,255,255,0.5)",
+          "letterSpacing": 0.5,
+          "textAlign": "center"
+        }
+      }
+    ],
+    "animations": [
+      {
+        "targets": ["logo-group"],
+        "type": "logo-reveal",
+        "startFrame": 0,
+        "postEffect": null,
+        "description": "8-phase choreographed animation: (1) horizontal line extends right 0-12f, (2) left wall draws up 8-22f, (3) roof draws across 18-35f, (4) right wall draws down 30-42f, (5) line retracts 40-58f, (6) ASHLEY letters rise + disperse 12-40f, (7) tagline bar expands 30-50f, (8) house icon single pulse 95-119f"
+      },
+      {
+        "targets": ["disclaimer"],
+        "type": "fade-in",
+        "startFrame": 20,
+        "postEffect": null
+      }
+    ],
+    "textContent": {
+      "tagline": "SHOP IN-STORE & ONLINE",
+      "disclaimer": "© 2026 Ashley Global Retail, LLC. All rights reserved.",
+      "locations": []
+    }
+  },
+  "hasPreview": true,
+  "createdAt": "2026-03-28T00:00:00.000Z"
+}

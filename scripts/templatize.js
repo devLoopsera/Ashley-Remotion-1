@@ -327,8 +327,17 @@ function registerInRoot(componentName, spec) {
         : (el.content || (el.propName === "disclaimer" ? DEFAULT_DISCLAIMER : `${el.propName} text`));
       defaultPropsLines.push(`\n          ${el.propName}: ${JSON.stringify(value)},`);
     } else if (el.isArrayProp && el.propName === "locations") {
-      let locs = [{city: "City Name", address: "Street Address"}];
-      if (Array.isArray(textContent.locations)) locs = textContent.locations;
+      // Build fallback from itemTemplate propPaths so all fields are represented
+      const fallbackLoc = {city: "City Name", address: "Street Address"};
+      if (el.itemTemplate && Array.isArray(el.itemTemplate.children)) {
+        for (const child of el.itemTemplate.children) {
+          if (child.propPath && !(child.propPath in fallbackLoc)) {
+            fallbackLoc[child.propPath] = child.propPath === "phone" ? "(000) 000-0000" : `${child.propPath}`;
+          }
+        }
+      }
+      let locs = [fallbackLoc];
+      if (Array.isArray(textContent.locations) && textContent.locations.length > 0) locs = textContent.locations;
       const locsJson = JSON.stringify(locs, null, 2).replace(/\n/g, "\n          ");
       defaultPropsLines.push(`\n          locations: ${locsJson},`);
     }
@@ -358,13 +367,19 @@ function registerInRoot(componentName, spec) {
         }}
       />`;
 
-  // Insert import after last existing import
-  const lastImportIdx = rootContent.lastIndexOf("import ");
-  const endOfLastImport = rootContent.indexOf("\n", lastImportIdx) + 1;
-  let newContent = rootContent.slice(0, endOfLastImport) + importLine + "\n" + rootContent.slice(endOfLastImport);
+  // Insert import after last existing import (preserve file's line endings, skip if already present)
+  const eol = rootContent.includes("\r\n") ? "\r\n" : "\n";
+  const alreadyImported = rootContent.includes(importLine);
+  let newContent = rootContent;
+  if (!alreadyImported) {
+    const lastImportIdx = rootContent.lastIndexOf("import ");
+    const endOfLastImport = rootContent.indexOf("\n", lastImportIdx) + 1;
+    newContent = rootContent.slice(0, endOfLastImport) + importLine + eol + rootContent.slice(endOfLastImport);
+  }
 
-  // Insert composition before closing </> tag
-  newContent = newContent.replace("    </>\n  );", `${compositionBlock}\n    </>\n  );`);
+  // Insert composition before closing </> tag (handle both \r\n and \n line endings)
+  const closingPattern = /    <\/>\r?\n  \);/;
+  newContent = newContent.replace(closingPattern, `${compositionBlock}${eol}    </>${eol}  );`);
 
   fs.writeFileSync(ROOT_TSX, newContent);
   console.log(`  ✓ Registered "${componentName}" in Root.tsx`);

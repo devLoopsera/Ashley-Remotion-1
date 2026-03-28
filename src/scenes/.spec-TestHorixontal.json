@@ -1,5 +1,5 @@
 {
-  "durationFrames": 69,
+  "durationFrames": 68,
   "fps": 30,
   "width": 1920,
   "height": 1080,
@@ -12,8 +12,8 @@
       "id": "logo-group",
       "type": "group",
       "position": {
-        "topPercent": 23.7,
-        "leftPx": 1115
+        "topPercent": 25.185185185185187,
+        "leftPx": 959
       },
       "children": [
         {
@@ -22,7 +22,7 @@
           "component": "AshleyHouseIcon",
           "props": {
             "color": "#E87722",
-            "height": 140
+            "height": 151
           }
         },
         {
@@ -31,13 +31,13 @@
           "component": "AshleyWordmark",
           "props": {
             "color": "#333333",
-            "height": 95
+            "height": 110
           }
         }
       ],
       "layout": {
         "direction": "column",
-        "gap": 25,
+        "gap": 20,
         "alignItems": "center"
       }
     },
@@ -48,15 +48,21 @@
       "propName": "locations",
       "position": {
         "belowElement": "logo-group",
-        "marginTop": 59,
-        "leftPx": 1115
+        "marginTop": 52,
+        "leftPx": 960
       },
       "layout": {
         "direction": "row",
-        "gap": 50,
+        "gap": 60,
         "alignItems": "flex-start"
       },
       "itemTemplate": {
+        "type": "group",
+        "layout": {
+          "direction": "column",
+          "gap": 15,
+          "alignItems": "flex-start"
+        },
         "children": [
           {
             "id": "address",
@@ -64,42 +70,37 @@
             "propPath": "address",
             "style": {
               "fontFamily": "Chesna Grotesk",
-              "fontSize": 55,
+              "fontSize": 64,
               "fontWeight": 600,
               "color": "#333333",
-              "letterSpacing": 0
+              "letterSpacing": 0,
+              "textAlign": "left"
             }
           },
           {
             "id": "city",
             "type": "text",
             "propPath": "city",
-            "position": {
-              "belowElement": "address",
-              "marginTop": 15
-            },
             "style": {
               "fontFamily": "Chesna Grotesk",
-              "fontSize": 55,
+              "fontSize": 64,
               "fontWeight": 600,
               "color": "#333333",
-              "letterSpacing": 0
+              "letterSpacing": 0,
+              "textAlign": "left"
             }
           },
           {
             "id": "phone",
             "type": "text",
             "propPath": "phone",
-            "position": {
-              "belowElement": "city",
-              "marginTop": 15
-            },
             "style": {
               "fontFamily": "Chesna Grotesk",
-              "fontSize": 55,
+              "fontSize": 64,
               "fontWeight": 600,
               "color": "#333333",
-              "letterSpacing": 0
+              "letterSpacing": 0,
+              "textAlign": "left"
             }
           }
         ]
@@ -127,7 +128,13 @@
   "textContent": {
     "tagline": null,
     "disclaimer": null,
-    "locations": []
+    "locations": [
+      {
+        "address": "Street Address",
+        "city": "City, State Zip",
+        "phone": "(000) 000-0000"
+      }
+    ]
   },
-  "notes": "The location information is represented by three stacked text elements for address, city/state/zip, and phone number, which are all visible as placeholders in the image."
+  "notes": "The placeholder text is being treated as a single location for the purpose of populating textContent, but the array structure is maintained for dynamic data."
 }

@@ -1,5 +1,5 @@
 {
-  "durationFrames": 123,
+  "durationFrames": 450,
   "fps": 30,
   "width": 1080,
   "height": 1920,
@@ -12,74 +12,35 @@
       "id": "logo-group",
       "type": "group",
       "position": {
-        "topPercent": 38,
-        "centerHorizontal": true
+        "centerHorizontal": true,
+        "centerVertical": true,
+        "marginTop": -60
       },
       "children": [
         {
           "id": "logo-icon",
           "type": "svg-component",
-          "size": {
-            "height": 160
-          },
           "component": "AshleyHouseIcon",
           "props": {
             "color": "#E87722",
-            "height": 160
+            "height": 138
           }
         },
         {
           "id": "logo-wordmark",
           "type": "svg-component",
-          "size": {
-            "height": 120
-          },
           "component": "AshleyWordmark",
           "props": {
             "color": "#333333",
-            "height": 120
+            "height": 124
           }
         }
       ],
       "layout": {
         "direction": "column",
-        "gap": 30,
+        "gap": 48,
         "alignItems": "center"
       }
-    },
-    {
-      "id": "tagline-box",
-      "type": "group",
-      "position": {
-        "belowElement": "logo-group",
-        "marginTop": 70,
-        "centerHorizontal": true
-      },
-      "children": [
-        {
-          "id": "tagline",
-          "type": "text",
-          "content": "COMPRA EN TIENDA Y EN LÍNEA",
-          "isTextProp": true,
-          "propName": "tagline",
-          "style": {
-            "fontFamily": "Chesna Grotesk",
-            "fontSize": 48,
-            "fontWeight": 600,
-            "color": "#333333",
-            "letterSpacing": 2,
-            "textTransform": "uppercase",
-            "textAlign": "center",
-            "backgroundColor": "#E87722",
-            "padding": {
-              "top": 20,
-              "bottom": 20,
-              "left": 60,
-              "right": 60
-            }
-          }
-        }
-      ]
     },
     {
       "id": "disclaimer",
@@ -88,15 +49,15 @@
       "isTextProp": true,
       "propName": "disclaimer",
       "position": {
-        "bottomPx": 60,
+        "bottomPx": 88,
         "centerHorizontal": true
       },
       "style": {
         "fontFamily": "Chesna Grotesk",
-        "fontSize": 24,
+        "fontSize": 22,
         "fontWeight": 400,
-        "color": "#595959",
-        "letterSpacing": 0.5,
+        "color": "#5A5A5A",
+        "letterSpacing": 0,
         "textAlign": "center"
       }
     }
@@ -106,15 +67,7 @@
       "targets": [
         "logo-group"
       ],
-      "type": "fade-in",
-      "startFrame": 15,
-      "postEffect": null
-    },
-    {
-      "targets": [
-        "tagline-box"
-      ],
-      "type": "scale-in",
+      "type": "logo-reveal",
       "startFrame": 15,
       "postEffect": null
     },
@@ -128,7 +81,9 @@
     }
   ],
   "textContent": {
-    "tagline": "COMPRA EN TIENDA Y EN LÍNEA",
-    "disclaimer": "© 2024 Ashley Global Retail, LLC. Todos los derechos reservados."
-  }
+    "tagline": null,
+    "disclaimer": "© 2024 Ashley Global Retail, LLC. Todos los derechos reservados.",
+    "locations": []
+  },
+  "notes": "The ad is in a vertical 1080x1920 format."
 }

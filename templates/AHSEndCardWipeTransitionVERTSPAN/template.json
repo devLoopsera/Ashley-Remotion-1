@@ -1,0 +1,40 @@
+{
+  "name": "AHSEndCardWipeTransitionVERTSPAN",
+  "displayName": "Light Vertical Logo with Slide-Up Reveal",
+  "category": "promo",
+  "description": "Clean light background end card with vertical stacked logo (orange house icon + dark wordmark), slide-up entrance animation, and Spanish disclaimer. Minimal layout with no locations.",
+  "sourceComponent": "AHSEndCardWipeTransitionVERTSPAN",
+  "variables": [
+    {
+      "id": "prop:disclaimer",
+      "category": "content",
+      "label": "Disclaimer",
+      "type": "text",
+      "defaultValue": "© 2024 Ashley Global Retail, LLC. Todos los derechos reservados.",
+      "customizable": true,
+      "name": "disclaimer",
+      "placeholder": "e.g. © 2024 Ashley Global Retail, LLC...",
+      "required": false
+    }
+  ],
+  "designFields": [
+    {
+      "id": "background",
+      "category": "design",
+      "label": "Background Color",
+      "type": "color",
+      "defaultValue": "#F2F2F2",
+      "customizable": true
+    },
+    {
+      "id": "fontFamily",
+      "category": "design",
+      "label": "Font Family",
+      "type": "font",
+      "defaultValue": "Chesna Grotesk",
+      "customizable": true
+    }
+  ],
+  "hasPreview": true,
+  "createdAt": "2026-03-28T13:00:00.000Z"
+}

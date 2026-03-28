@@ -2,12 +2,10 @@ import React from "react";
 import {
   useCurrentFrame,
   AbsoluteFill,
-  Video,
   Sequence,
-  staticFile,
   interpolate,
 } from "remotion";
-import {COLORS, SCENE_TIMING, VIDEO_SRC, TOTAL_FRAMES} from "./constants";
+import {COLORS, SCENE_TIMING, TOTAL_FRAMES} from "./constants";
 import {Scene1Establishing} from "./scenes/Scene1Establishing";
 import {Scene2Nightstand} from "./scenes/Scene2Nightstand";
 import {Scene3Bedding} from "./scenes/Scene3Bedding";
@@ -34,28 +32,15 @@ export const AshleyBedroom: React.FC = () => {
 
   return (
     <AbsoluteFill style={{backgroundColor: COLORS.black}}>
-      {/* === BASE LAYER: Video Asset (z-index: 1) === */}
+      {/* === BASE LAYER: Background (z-index: 1) === */}
       <AbsoluteFill
         style={{
           zIndex: 1,
           transform: `scale(${kenBurnsScale}) translate(${panX}px, ${panY}px)`,
           willChange: "transform",
+          backgroundColor: COLORS.black,
         }}
-      >
-        <Video
-          src={staticFile(VIDEO_SRC)}
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-          }}
-        />
-      </AbsoluteFill>
-
-      {/* === MID LAYER: Motion Graphics / Highlights (z-index: 10) === */}
-      {/* (Stroke lines and hotspot ripples are rendered within their scenes) */}
-
-      {/* === TOP LAYER: Typography and Brand (z-index: 20) === */}
+      />
 
       {/* Scene 1: 0.0s - 2.5s (frames 0-74) — Establishing shot */}
       <Sequence

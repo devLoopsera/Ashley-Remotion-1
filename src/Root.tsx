@@ -5,8 +5,7 @@ import {EndCard24682} from "./scenes/EndCard24682";
 import {EndCard24712} from "./scenes/EndCard24712";
 import {EndCardTemplate} from "./scenes/EndCardTemplate";
 import {FPS, TOTAL_FRAMES} from "./constants";
-import {DelRioCard} from "./scenes/Generated_DelRioCard";
-import {EndCard01SEAMBASHFSE2TVTemplatesAug256sCustomA01WsqxriHorizontal169} from "./scenes/Generated_EndCard01SEAMBASHFSE2TVTemplatesAug256sCustomA01WsqxriHorizontal169";
+import {DelRioCard} from "./scenes/Generated_DelRioCard";
 import {TestCard} from "./scenes/Generated_TestCard";
 import {Q2AHSNATMemorialDayWeek4SocialHorzVideo15169FurnUq5fi9} from "./scenes/Generated_Q2AHSNATMemorialDayWeek4SocialHorzVideo15169FurnUq5fi9";
 import {EndCard02TEMASHLDECustomSupportTVTemplate15sA01Xnwae9} from "./scenes/Generated_EndCard02TEMASHLDECustomSupportTVTemplate15sA01Xnwae9";
@@ -14,9 +13,8 @@ import {EndCard03SEAASHBedAchesCustomizations202515sTVSpotRoomSceneA01V1elp7} fr
 import {Q2AGRNATPRTempurBreezeEVGTVYTMattress30sENG1080x1080Nzlmn9} from "./scenes/Generated_Q2AGRNATPRTempurBreezeEVGTVYTMattress30sENG1080x1080Nzlmn9";
 import {Dedluo} from "./scenes/Generated_Dedluo";
 import {AHSEndCardWipeTransitionVERTSPAN} from "./scenes/Generated_AHSEndCardWipeTransitionVERTSPAN";
-import {LogoValidation} from "./LogoValidation";
-import {AHSEndCardWipeTransitionVERTSPAN1} from "./scenes/Generated_AHSEndCardWipeTransitionVERTSPAN1";
-import {Gap3jy} from "./scenes/Generated_Gap3jy";
+import {LogoValidation} from "./LogoValidation";
+import {TestHorixontal} from "./scenes/Generated_TestHorixontal";
 
 const DEFAULT_DISCLAIMER =
   "Ashley stores are independently owned and operated. ©2024 Rogers Furniture, DBA Ashley. All rights reserved. Furniture since 1945.";
@@ -83,17 +81,6 @@ export const RemotionRoot: React.FC = () => {
         }}
       />
       <Composition
-        id="EndCard01SEAMBASHFSE2TVTemplatesAug256sCustomA01WsqxriHorizontal169"
-        component={EndCard01SEAMBASHFSE2TVTemplatesAug256sCustomA01WsqxriHorizontal169}
-        durationInFrames={150}
-        fps={30}
-        width={1920}
-        height={1080}
-        defaultProps={{
-          locations: [],
-        }}
-      />
-      <Composition
         id="TestCard"
         component={TestCard}
         durationInFrames={150}
@@ -131,7 +118,13 @@ export const RemotionRoot: React.FC = () => {
         width={1920}
         height={1080}
         defaultProps={{
-          tagline: "shop in-store • online",
+          locations: [
+            {
+              "city": "City Name",
+              "address": "Street Address",
+              "phone": "(000) 000-0000"
+            }
+          ],
         }}
       />
       <Composition
@@ -200,15 +193,20 @@ export const RemotionRoot: React.FC = () => {
         height={1080}
       />
       <Composition
-        id="AHSEndCardWipeTransitionVERTSPAN1"
-        component={AHSEndCardWipeTransitionVERTSPAN1}
-        durationInFrames={236}
+        id="TestHorixontal"
+        component={TestHorixontal}
+        durationInFrames={72}
         fps={30}
         width={1920}
         height={1080}
         defaultProps={{
-          tagline: "COMPRA EN TIENDA Y EN LÍNEA",
-          disclaimer: "© 2024 Ashley Global Retail, LLC. Todos los derechos reservados.",
+          locations: [
+            {
+              "address": "Street Address",
+              "city": "City, State Zip",
+              "phone": "(000) 000-0000"
+            }
+          ],
         }}
       />
     </>

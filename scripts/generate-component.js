@@ -295,6 +295,28 @@ const scaleProgress = spring({frame: frame - startFrame, fps, config: {damping: 
 Do NOT write spring() or interpolate() for this — AshleyLogoReveal handles all animation internally.
 Pass tagline and disclaimer from props. Match backgroundColor to spec.background.color.
 
+### REFERENCE: AshleyLogoReveal internal animation breakdown (150 frames @ 30fps = 5s)
+This is the choreography inside AshleyLogoReveal — use it to understand timing when composing other elements around the logo reveal:
+
+| Phase | Frames | Description | Technique |
+|-------|--------|-------------|-----------|
+| 1 | 0–12 | Horizontal line extends right from house base | interpolate + strokeDashoffset |
+| 2 | 8–22 | Left wall draws UP | pathLength strokeDashoffset on continuous house path |
+| 3 | 18–35 | Roof draws across (left → peak → right) | pathLength strokeDashoffset |
+| 4 | 30–42 | Right wall draws DOWN | pathLength strokeDashoffset |
+| 5 | 40–58 | Extended line retracts back to house corner | interpolate x2 position |
+| 6 | 12–40 | "ASHLEY" letters rise + disperse outward then settle | per-letter translateX offsets (A:320, S:170, H:35, L:-95, E:-215, Y:-340) converging to 0, with translateY 40→0 and opacity fade |
+| 7 | 30–50 | Tagline bar scaleX expands, text fades in 40–52 | interpolate scaleX 0→1, opacity |
+| 8 | 95–119 | House icon single pulse (sin curve, scale 1.0→1.25→1.0) | Math.sin over interpolated progress |
+| — | 20–38 | Disclaimer fades in | interpolate opacity 0→1 |
+
+Key techniques used:
+- SVG \`pathLength=1\` + \`strokeDasharray=1\` + \`strokeDashoffset={1 - progress}\` for stroke draw
+- Single continuous house path for clean miter joins at corners
+- House vertices scaled from center for pulse (not CSS transform — path coordinates recalculated)
+- Letter dispersion uses AshleyWordmark's \`letterStyles\` prop for per-letter transforms
+- Phases overlap intentionally for fluid, organic motion
+
 **postEffect: "scale-throb"** — add AFTER the entrance spring, on the same element
 \`\`\`tsx
 // Start throb ~20 frames after entrance begins
@@ -313,6 +335,101 @@ const throbScale = interpolate(throbProgress, [0, 0.5, 1], [1.0, 1.45, 1.0]);
 - Use \`interpolate()\` only for mapping spring progress to transform values (translateY, translateX, scale ranges) — NOT for opacity (spring output 0→1 is already correct for opacity)
 - For multiple elements with different start times, each MUST have its own spring() call
 - When user feedback asks to add slide-in or slide-up animations, implement the correct pattern from the animation types above — do not ignore the request
+
+## Spec Schema Reference
+
+The design spec JSON uses a custom schema. You MUST understand and follow these properties exactly — they define the layout.
+
+### Position properties (on any element)
+- \`topPercent\` — percentage from top of the 1080p canvas. Convert to CSS: \`top: "\${topPercent}%"\` with \`position: "absolute"\`
+- \`leftPx\` — absolute left position in pixels on 1920×1080 canvas. Convert to CSS: \`left: \${leftPx}\` with \`position: "absolute"\`
+- \`rightPx\` — absolute right position in pixels. Convert to CSS: \`right: \${rightPx}\`
+- \`bottomPx\` — absolute bottom position in pixels. Convert to CSS: \`bottom: \${bottomPx}\`
+- \`centerHorizontal: true\` — center the element horizontally on the canvas. Use \`left: 0, right: 0, display: "flex", justifyContent: "center"\` or \`left: "50%", transform: "translateX(-50%)"\`
+- \`belowElement: "element-id"\` — position this element below the referenced element. Use a shared parent column flex container, or calculate absolute top from the above element's position + height + marginTop
+- \`marginTop\` — pixel gap when using \`belowElement\`. Apply as CSS \`marginTop\`
+
+### Element types
+- \`type: "group"\` — a container \`<div>\` that holds \`children\` elements. Apply its \`layout\` and \`position\` properties
+- \`type: "text"\` — a \`<p>\` element. If it has \`propPath\`, render the dynamic value from the mapped array item (e.g. \`propPath: "address"\` → \`{loc.address}\`). If it has \`isTextProp: true\` and \`propName\`, render from component props (e.g. \`{tagline}\`)
+- \`type: "svg-component"\` — render the named React component from \`"../components/logo"\` with the given \`props\`. Example: \`"component": "AshleyHouseIcon", "props": {"color": "#E87722", "height": 140}\` → \`<AshleyHouseIcon color="#E87722" height={140} />\`
+
+### Layout properties (on group elements)
+- \`layout.direction\` → CSS \`flexDirection\` ("column" or "row")
+- \`layout.gap\` → CSS \`gap\` in pixels
+- \`layout.alignItems\` → CSS \`alignItems\`
+- \`layout.justifyContent\` → CSS \`justifyContent\`
+
+### Array prop elements
+- \`isArrayProp: true\` + \`propName: "locations"\` — this element renders by mapping over the \`locations\` prop array
+- \`itemTemplate\` — the JSX structure to render for EACH item in the array using \`.map()\`
+- \`itemTemplate.children[].propPath\` — the key to read from each array item (e.g. \`"address"\` → \`{loc.address}\`, \`"city"\` → \`{loc.city}\`)
+- The locations prop type should include ALL propPath keys found in the itemTemplate children
+
+### Background
+- \`background.type: "solid"\` + \`background.color\` — use this EXACT hex color as \`backgroundColor\` on the root AbsoluteFill. NEVER substitute a different color.
+- \`background.type: "image"\` + \`background.imageFile\` — render as full-screen \`<Img src={staticFile(imageFile)} style={{width:"100%",height:"100%",objectFit:"cover"}} />\`
+- \`background.type: "transparent"\` — use \`backgroundColor: "transparent"\` on the root AbsoluteFill
+
+### Spec-to-Code Example
+
+Given this spec snippet:
+\`\`\`json
+{
+  "background": {"type": "solid", "color": "#F7F7F7"},
+  "elements": [
+    {
+      "id": "logo-group",
+      "type": "group",
+      "position": {"topPercent": 28, "leftPx": 1060},
+      "children": [
+        {"id": "logo-icon", "type": "svg-component", "component": "AshleyHouseIcon", "props": {"color": "#E87722", "height": 140}},
+        {"id": "logo-wordmark", "type": "svg-component", "component": "AshleyWordmark", "props": {"color": "#333333", "height": 100}}
+      ],
+      "layout": {"direction": "column", "gap": 20, "alignItems": "center"}
+    },
+    {
+      "id": "locations",
+      "type": "group",
+      "isArrayProp": true,
+      "propName": "locations",
+      "position": {"belowElement": "logo-group", "marginTop": 40, "leftPx": 1060},
+      "layout": {"direction": "row", "gap": 100, "alignItems": "flex-start"},
+      "itemTemplate": {
+        "type": "group",
+        "layout": {"direction": "column", "gap": 10, "alignItems": "center"},
+        "children": [
+          {"id": "address", "type": "text", "propPath": "address", "style": {"fontFamily": "Chesna Grotesk", "fontSize": 56, "fontWeight": 600, "color": "#333333"}},
+          {"id": "city", "type": "text", "propPath": "city", "style": {"fontFamily": "Chesna Grotesk", "fontSize": 56, "fontWeight": 600, "color": "#333333"}}
+        ]
+      }
+    }
+  ]
+}
+\`\`\`
+
+The generated JSX should be:
+\`\`\`tsx
+<AbsoluteFill style={{backgroundColor: "#F7F7F7"}}>
+  {/* logo-group: positioned at top 28%, left 1060px */}
+  <div style={{position: "absolute", top: "28%", left: 1060, display: "flex", flexDirection: "column", gap: 20, alignItems: "center", opacity: logoFadeIn}}>
+    <AshleyHouseIcon color="#E87722" height={140} />
+    <AshleyWordmark color="#333333" height={100} />
+  </div>
+
+  {/* locations: below logo-group, left 1060px, maps over locations prop */}
+  <div style={{position: "absolute", top: "28%", left: 1060, marginTop: 340, display: "flex", flexDirection: "row", gap: 100, alignItems: "flex-start", opacity: locationsFadeIn}}>
+    {locations.map((loc, i) => (
+      <div key={i} style={{display: "flex", flexDirection: "column", gap: 10, alignItems: "center"}}>
+        <p style={{fontFamily: CHESNA, fontSize: 56, fontWeight: 600, color: "#333333", margin: 0}}>{loc.address}</p>
+        <p style={{fontFamily: CHESNA, fontSize: 56, fontWeight: 600, color: "#333333", margin: 0}}>{loc.city}</p>
+      </div>
+    ))}
+  </div>
+</AbsoluteFill>
+\`\`\`
+
+Key points: positions use EXACT values from the spec. svg-component elements become React components. isArrayProp elements use .map(). Layout properties map directly to CSS flex properties.
 
 ## Available Brand Assets
 
@@ -379,9 +496,11 @@ Use \`AshleyHouseIcon\` + \`AshleyWordmark\` individually ONLY when you need to 
 - USE THIS when any animation in the spec has type: "logo-reveal" targeting the logo or logo-group
 - This is a FULL-SCREEN component — it renders its own AbsoluteFill background. Do NOT nest it in a positioned div.
 - It internally handles all logo animation — do NOT also render AshleyHorizontalLogo or AshleyVerticalLogo
+- 8-phase animation over 150 frames (5s): line extend → wall draw → roof draw → wall draw → line retract → letter disperse → tagline expand → house pulse
 - All 8 props are optional (sensible defaults exist):
   tagline, disclaimer, houseColor, wordmarkColor, taglineBarColor, taglineTextColor, disclaimerColor, backgroundColor
 - Extract tagline/disclaimer from spec.textContent; extract colors from spec.background
+- When composing other elements around logo-reveal, note that the logo animation settles by ~frame 58 and the pulse happens at frames 95–119, so stagger surrounding elements accordingly
 - Example:
   \`<AshleyLogoReveal
     tagline={tagline}
@@ -561,11 +680,19 @@ Export type name: ${componentName}Props
 
 Requirements:
 - Match the visual design from the spec (colors, font sizes, spacing, positions)
+- Follow the spec's position properties EXACTLY as documented in the Spec Schema Reference: topPercent → CSS top percentage, leftPx → CSS left pixels, centerHorizontal → horizontally centered, belowElement → positioned below the referenced element
+- Render svg-component elements as the named React component from "../components/logo" with the exact props from the spec
+- For isArrayProp elements, use .map() over the prop array and render the itemTemplate children for each item
+- PROP NAMES — CRITICAL: The TypeScript prop interface MUST use the EXACT propPath strings from the spec as property names. If the spec says propPath: "city", the prop must be named "city", NOT "cityState", "cityStateZip", or any renamed variant. If propPath is "phone", the prop must be "phone". Do NOT rename, merge, or restructure propPaths.
+- locations should be typed as Array with keys matching ALL propPath values EXACTLY as they appear in the spec's itemTemplate children
+- Use the spec's background.color as the EXACT backgroundColor — never substitute a different color
+- BACKGROUND — CRITICAL: If spec.background.type is "solid", use ONLY backgroundColor on the root AbsoluteFill. Do NOT add any <Img> elements or staticFile() calls for backgrounds. No background images unless spec.background.type is "image".
 - Implement all animations from the spec (timing, easing, scale values)
 - All text content becomes typed props
-- locations should be typed as Array<{city: string; address: string}>
 - DISCLAIMER: only include a disclaimer prop if the spec elements array contains an element with id "disclaimer" or propName "disclaimer" — otherwise omit it entirely
 - Only render elements present in the spec — do not add elements not in the spec
+- Do NOT add decorative containers, cards, rounded rectangles, wrapper divs with padding/borderRadius/boxShadow, or any visual elements that are not explicitly in the spec
+- POSITIONING — CRITICAL: Use EXACT pixel values from the spec. If leftPx is 1020, use CSS left: 1020. Do NOT convert to right-based positioning or approximate values. If topPercent is 37, use top: "37%".
 - staticFile() must ONLY use string literals, never prop variables
 - If spec.background.type is "image" and spec.background.imageFile is set, render it as a full-screen background Img using staticFile(imageFile) where imageFile is the exact string from the spec${customLogoInstruction}${customFontInstruction}${initialInstructions ? `\n\nAdditional instructions: "${initialInstructions}"` : ""}
 
