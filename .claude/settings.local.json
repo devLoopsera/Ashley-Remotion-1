@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(node scripts/preview-server.js)",
+      "Bash(netstat -ano)",
+      "Bash(findstr \":3001\")",
+      "Bash(findstr LISTENING)",
+      "Bash(cmd /c \"wmic process where processid=25060 get name,commandline 2>&1\")",
+      "Bash(powershell -Command \"\\(New-Object Net.WebClient\\).DownloadString\\(''http://localhost:3001/api/scenes''\\) | ConvertFrom-Json | Select-Object -ExpandProperty scenes | Measure-Object | Select-Object -ExpandProperty Count\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3001/api/status)",
+      "Bash(curl:*)",
+      "Bash(python3:*)",
+      "Bash(magick identify:*)",
+      "Bash(identify \"C:/Users/HomePC/Documents/Cursor Projects/Ashley Remotion 1/public/Ashley-Logo-Horizontal_PNG_et54ya.png\")",
+      "Bash(npm run:*)",
+      "Bash(cmd.exe /c \"where node & where npm\")",
+      "Bash(command -v npm)",
+      "Bash(where npm:*)",
+      "Bash(cmd /c \"where npm 2>nul\")",
+      "Bash(cmd /c \"where npm\")",
+      "Bash(cmd /c \"node --version & npm --version\")",
+      "Bash(powershell -Command \"Get-Command npm -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source; node --version; npm --version\")",
+      "Bash(powershell -Command \"Get-Command npm | Select-Object -ExpandProperty Source\")",
+      "Read(//c/Program Files/nodejs//**)",
+      "Read(//c/Program Files \\(x86\\)/**)",
+      "Bash(export PATH=\"/c/Program Files/nodejs:$PATH\")",
+      "Bash(findstr \":3000\")",
+      "Bash(npx remotion:*)",
+      "Bash(dir \"d:\\\\Business\\\\AlexCodes\\\\Ashley-Remotion-1-main\\\\node_modules\\\\.bin\" /b)",
+      "Bash(findstr /i remotion)",
+      "Bash(cmd /c \"dir \\\\\"d:\\\\Business\\\\AlexCodes\\\\Ashley-Remotion-1-main\\\\node_modules\\\\.bin\\\\\" /b | findstr /i remotion\")",
+      "Bash(cmd /c \"dir \\\\\"d:\\\\Business\\\\AlexCodes\\\\Ashley-Remotion-1-main\\\\node_modules\\\\@remotion\\\\\" /b\")",
+      "Bash(cmd /c \"dir \\\\\"d:\\\\Business\\\\AlexCodes\\\\Ashley-Remotion-1-main\\\\node_modules\\\\\" /b | findstr /i remotion\")",
+      "Bash(cmd /c \"dir \\\\\"d:\\\\Business\\\\AlexCodes\\\\Ashley-Remotion-1-main\\\\node_modules\\\\\" /b 2>&1 | head -20\")",
+      "Read(//d d:/Business/AlexCodes/**)",
+      "Bash(dir node_modules /b)",
+      "Bash(node node_modules/@remotion/cli/remotion-cli.js studio)",
+      "Bash(findstr \":3001 \\\\|:3000 \")"
+    ]
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "durationFrames": 69,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "background": {
+    "type": "solid",
+    "color": "#FFFFFF"
+  },
+  "elements": [
+    {
+      "id": "logo-group",
+      "type": "group",
+      "position": {
+        "topPercent": 23.7,
+        "leftPx": 1115
+      },
+      "children": [
+        {
+          "id": "logo-icon",
+          "type": "svg-component",
+          "component": "AshleyHouseIcon",
+          "props": {
+            "color": "#E87722",
+            "height": 140
+          }
+        },
+        {
+          "id": "logo-wordmark",
+          "type": "svg-component",
+          "component": "AshleyWordmark",
+          "props": {
+            "color": "#333333",
+            "height": 95
+          }
+        }
+      ],
+      "layout": {
+        "direction": "column",
+        "gap": 25,
+        "alignItems": "center"
+      }
+    },
+    {
+      "id": "locations",
+      "type": "group",
+      "isArrayProp": true,
+      "propName": "locations",
+      "position": {
+        "belowElement": "logo-group",
+        "marginTop": 59,
+        "leftPx": 1115
+      },
+      "layout": {
+        "direction": "row",
+        "gap": 50,
+        "alignItems": "flex-start"
+      },
+      "itemTemplate": {
+        "children": [
+          {
+            "id": "address",
+            "type": "text",
+            "propPath": "address",
+            "style": {
+              "fontFamily": "Chesna Grotesk",
+              "fontSize": 55,
+              "fontWeight": 600,
+              "color": "#333333",
+              "letterSpacing": 0
+            }
+          },
+          {
+            "id": "city",
+            "type": "text",
+            "propPath": "city",
+            "position": {
+              "belowElement": "address",
+              "marginTop": 15
+            },
+            "style": {
+              "fontFamily": "Chesna Grotesk",
+              "fontSize": 55,
+              "fontWeight": 600,
+              "color": "#333333",
+              "letterSpacing": 0
+            }
+          },
+          {
+            "id": "phone",
+            "type": "text",
+            "propPath": "phone",
+            "position": {
+              "belowElement": "city",
+              "marginTop": 15
+            },
+            "style": {
+              "fontFamily": "Chesna Grotesk",
+              "fontSize": 55,
+              "fontWeight": 600,
+              "color": "#333333",
+              "letterSpacing": 0
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "animations": [
+    {
+      "targets": [
+        "logo-group"
+      ],
+      "type": "fade-in",
+      "startFrame": 3,
+      "postEffect": null
+    },
+    {
+      "targets": [
+        "locations"
+      ],
+      "type": "fade-in",
+      "startFrame": 9,
+      "postEffect": null
+    }
+  ],
+  "textContent": {
+    "tagline": null,
+    "disclaimer": null,
+    "locations": []
+  },
+  "notes": "The location information is represented by three stacked text elements for address, city/state/zip, and phone number, which are all visible as placeholders in the image."
+}

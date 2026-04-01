@@ -1,0 +1,64 @@
+{
+  "name": "TestCard",
+  "displayName": "Dark Horizontal Logo with Dynamic Locations",
+  "category": "promo",
+  "description": "Props-driven version of the reference end card. Dark background, horizontal white logo with icon throb, tagline, dynamic location columns via props, and disclaimer.",
+  "sourceComponent": "TestCard",
+  "variables": [
+    {
+      "id": "prop:tagline",
+      "category": "content",
+      "label": "Tagline",
+      "type": "text",
+      "defaultValue": "Shop More Deals In-Store",
+      "customizable": true,
+      "name": "tagline",
+      "placeholder": "e.g. Shop More Deals In-Store",
+      "required": true
+    },
+    {
+      "id": "prop:locations",
+      "category": "content",
+      "label": "Store Locations",
+      "type": "locations",
+      "defaultValue": [
+        { "city": "City Name", "address": "Street Address" }
+      ],
+      "customizable": true,
+      "name": "locations",
+      "placeholder": "e.g. [{\"city\":\"City Name\",\"address\":\"Street Address\"}]",
+      "required": true
+    },
+    {
+      "id": "prop:disclaimer",
+      "category": "content",
+      "label": "Disclaimer",
+      "type": "text",
+      "defaultValue": "Ashley stores are independently owned and operated. ©2024 Rogers Furniture, DBA Ashley. All rights reserved. Furniture since 1945.",
+      "customizable": true,
+      "name": "disclaimer",
+      "placeholder": "e.g. Ashley stores are independently owned and operated...",
+      "required": false
+    }
+  ],
+  "designFields": [
+    {
+      "id": "background",
+      "category": "design",
+      "label": "Background Color",
+      "type": "color",
+      "defaultValue": "#1a1008",
+      "customizable": true
+    },
+    {
+      "id": "fontFamily",
+      "category": "design",
+      "label": "Font Family",
+      "type": "font",
+      "defaultValue": "Chesna Grotesk",
+      "customizable": true
+    }
+  ],
+  "hasPreview": true,
+  "createdAt": "2026-03-28T12:30:00.000Z"
+}

@@ -1,0 +1,89 @@
+{
+  "durationFrames": 450,
+  "fps": 30,
+  "width": 1080,
+  "height": 1920,
+  "background": {
+    "type": "solid",
+    "color": "#F2F2F2"
+  },
+  "elements": [
+    {
+      "id": "logo-group",
+      "type": "group",
+      "position": {
+        "centerHorizontal": true,
+        "centerVertical": true,
+        "marginTop": -60
+      },
+      "children": [
+        {
+          "id": "logo-icon",
+          "type": "svg-component",
+          "component": "AshleyHouseIcon",
+          "props": {
+            "color": "#E87722",
+            "height": 138
+          }
+        },
+        {
+          "id": "logo-wordmark",
+          "type": "svg-component",
+          "component": "AshleyWordmark",
+          "props": {
+            "color": "#333333",
+            "height": 124
+          }
+        }
+      ],
+      "layout": {
+        "direction": "column",
+        "gap": 48,
+        "alignItems": "center"
+      }
+    },
+    {
+      "id": "disclaimer",
+      "type": "text",
+      "content": null,
+      "isTextProp": true,
+      "propName": "disclaimer",
+      "position": {
+        "bottomPx": 88,
+        "centerHorizontal": true
+      },
+      "style": {
+        "fontFamily": "Chesna Grotesk",
+        "fontSize": 22,
+        "fontWeight": 400,
+        "color": "#5A5A5A",
+        "letterSpacing": 0,
+        "textAlign": "center"
+      }
+    }
+  ],
+  "animations": [
+    {
+      "targets": [
+        "logo-group"
+      ],
+      "type": "logo-reveal",
+      "startFrame": 15,
+      "postEffect": null
+    },
+    {
+      "targets": [
+        "disclaimer"
+      ],
+      "type": "fade-in",
+      "startFrame": 15,
+      "postEffect": null
+    }
+  ],
+  "textContent": {
+    "tagline": null,
+    "disclaimer": "© 2024 Ashley Global Retail, LLC. Todos los derechos reservados.",
+    "locations": []
+  },
+  "notes": "The ad is in a vertical 1080x1920 format."
+}

@@ -1,0 +1,52 @@
+{
+  "durationFrames": 118,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "background": {
+    "type": "solid",
+    "color": "#F2F2F2"
+  },
+  "elements": [
+    {
+      "id": "logo-group",
+      "type": "group",
+      "position": {
+        "centerHorizontal": true,
+        "centerVertical": true
+      },
+      "children": [
+        {
+          "id": "logo-icon",
+          "type": "svg-component",
+          "component": "AshleyHouseIcon",
+          "props": { "color": "#E87722", "height": 155 }
+        },
+        {
+          "id": "logo-wordmark",
+          "type": "svg-component",
+          "component": "AshleyWordmark",
+          "props": { "color": "#333333", "height": 100 }
+        }
+      ],
+      "layout": { "direction": "column", "gap": 15, "alignItems": "center" }
+    },
+    {
+      "id": "disclaimer",
+      "type": "text",
+      "content": "© 2024 Ashley Global Retail, LLC. Todos los derechos reservados.",
+      "isTextProp": true,
+      "propName": "disclaimer",
+      "position": { "bottomPx": 40, "centerHorizontal": true },
+      "style": { "fontFamily": "Chesna Grotesk", "fontSize": 22, "fontWeight": 400, "color": "#5A5A5A", "textAlign": "center", "lineHeight": 1.2 }
+    }
+  ],
+  "animations": [
+    { "targets": ["logo-group"], "type": "slide-up", "startFrame": 15, "postEffect": null },
+    { "targets": ["disclaimer"], "type": "fade-in", "startFrame": 15, "postEffect": null }
+  ],
+  "textContent": {
+    "disclaimer": "© 2024 Ashley Global Retail, LLC. Todos los derechos reservados.",
+    "locations": []
+  }
+}

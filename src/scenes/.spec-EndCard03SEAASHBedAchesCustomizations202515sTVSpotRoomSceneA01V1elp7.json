@@ -1,0 +1,120 @@
+{
+  "durationFrames": 165,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "background": {
+    "type": "solid",
+    "color": "#F8F8F8"
+  },
+  "elements": [
+    {
+      "id": "logo-group",
+      "type": "group",
+      "position": {
+        "topPercent": 15.6,
+        "leftPercent": 53.3
+      },
+      "children": [
+        {
+          "id": "logo-icon",
+          "type": "svg-component",
+          "size": {
+            "height": 104
+          },
+          "component": "AshleyHouseIcon",
+          "props": {
+            "color": "#E87722",
+            "height": 104
+          }
+        },
+        {
+          "id": "logo-wordmark",
+          "type": "svg-component",
+          "size": {
+            "height": 125
+          },
+          "component": "AshleyWordmark",
+          "props": {
+            "color": "#333333",
+            "height": 125
+          }
+        }
+      ],
+      "layout": {
+        "direction": "row",
+        "gap": 22,
+        "alignItems": "center"
+      }
+    },
+    {
+      "id": "tagline",
+      "type": "text",
+      "content": null,
+      "isTextProp": true,
+      "propName": "tagline",
+      "style": {
+        "fontFamily": "Chesna Grotesk",
+        "fontSize": 60,
+        "fontWeight": 400,
+        "color": "#333333",
+        "letterSpacing": 1,
+        "textAlign": "center"
+      },
+      "position": {
+        "belowElement": "logo-group",
+        "marginTop": 7
+      }
+    },
+    {
+      "id": "disclaimer",
+      "type": "text",
+      "content": null,
+      "isTextProp": true,
+      "propName": "disclaimer",
+      "position": {
+        "bottomPx": 48,
+        "rightPx": 50
+      },
+      "style": {
+        "fontFamily": "Chesna Grotesk",
+        "fontSize": 28,
+        "fontWeight": 400,
+        "color": "#585858",
+        "letterSpacing": 0.5,
+        "textAlign": "right"
+      }
+    }
+  ],
+  "animations": [
+    {
+      "targets": [
+        "disclaimer"
+      ],
+      "type": "slide-up",
+      "startFrame": 0,
+      "postEffect": null
+    },
+    {
+      "targets": [
+        "logo-group"
+      ],
+      "type": "fade-in",
+      "startFrame": 6,
+      "postEffect": "scale-throb"
+    },
+    {
+      "targets": [
+        "tagline"
+      ],
+      "type": "slide-up",
+      "startFrame": 30,
+      "postEffect": null
+    }
+  ],
+  "textContent": {
+    "tagline": "shop in-store & online",
+    "disclaimer": "Powered by Sleeptracker-AI®."
+  },
+  "notes": "The original image provided is square (1920x1920), but the content appears to be composed for a 16:9 (1920x1080) frame, letterboxed within the square. All measurements are relative to this 1920x1080 active area."
+}

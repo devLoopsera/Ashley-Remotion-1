@@ -1,0 +1,38 @@
+/*
+        This font software is the property of Commercial Type.
+
+        You may not modify the font software, use it on another website, or install it on a computer.
+
+        License information is available at http://commercialtype.com/eula
+        For more information please visit Commercial Type at http://commercialtype.com or email us at info[at]commercialtype.com
+
+        Copyright (C) 2025 Schwartzco Inc.
+        License 2504-CILNFL      
+*/
+
+@font-face {
+	font-family: 'Publico Headline Web';
+	src: url('PublicoHeadline-Roman-Web.woff2') format('woff2'),
+		 url('PublicoHeadline-Roman-Web.woff') format('woff');
+	font-weight: 400;
+	font-style: normal;
+	}
+
+.PublicoHeadline-Roman-Web {
+	font-family: 'Publico Headline Web';
+	font-weight: 400;
+	font-style: normal;
+	}
+@font-face {
+	font-family: 'Publico Headline Web';
+	src: url('PublicoHeadline-Italic-Web.woff2') format('woff2'),
+		 url('PublicoHeadline-Italic-Web.woff') format('woff');
+	font-weight: 400;
+	font-style: italic;
+	}
+
+.PublicoHeadline-Italic-Web {
+	font-family: 'Publico Headline Web';
+	font-weight: 400;
+	font-style: italic;
+	}

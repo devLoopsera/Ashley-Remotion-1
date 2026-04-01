@@ -1,0 +1,28 @@
+{
+  "name": "ashley-bedroom-collection",
+  "version": "1.0.0",
+  "description": "Ashley Furniture - Modern Bedroom Collection showcase built with Remotion",
+  "private": true,
+  "scripts": {
+    "dev": "remotion studio",
+    "build": "remotion bundle",
+    "render": "remotion render src/index.ts AshleyBedroom out/AshleyBedroom.mp4",
+    "upgrade": "remotion upgrade",
+    "preview": "node scripts/preview-server.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
+    "@google/generative-ai": "^0.24.1",
+    "@remotion/cli": "4.0.434",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "multer": "^2.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "4.0.434"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "typescript": "^5.7.3"
+  }
+}

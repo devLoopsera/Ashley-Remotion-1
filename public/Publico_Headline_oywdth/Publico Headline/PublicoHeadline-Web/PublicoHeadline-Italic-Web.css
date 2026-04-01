@@ -1,0 +1,13 @@
+@font-face {
+	font-family: 'Publico Headline Web';
+	src: url('PublicoHeadline-Italic-Web.woff2') format('woff2'),
+		 url('PublicoHeadline-Italic-Web.woff') format('woff');
+	font-weight: 400;
+	font-style: italic;
+	}
+
+.PublicoHeadline-Italic-Web {
+	font-family: 'Publico Headline Web';
+	font-weight: 400;
+	font-style: italic;
+	}

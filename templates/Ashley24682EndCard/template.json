@@ -1,0 +1,75 @@
+{
+  "name": "Ashley24682EndCard",
+  "displayName": "Dark Horizontal Logo with Icon Throb",
+  "category": "promo",
+  "description": "Classic Ashley end card on dark background with horizontal white logo, house icon scale-throb animation, tagline, dual location columns, and disclaimer. The reference implementation for all generated end cards.",
+  "sourceComponent": "EndCard24682",
+  "variables": [
+    {
+      "id": "prop:tagline",
+      "category": "content",
+      "label": "Tagline",
+      "type": "text",
+      "defaultValue": "Shop More Deals In-Store",
+      "customizable": true,
+      "name": "tagline",
+      "placeholder": "e.g. Shop More Deals In-Store",
+      "required": true
+    },
+    {
+      "id": "prop:locations",
+      "category": "content",
+      "label": "Store Locations",
+      "type": "locations",
+      "defaultValue": [
+        {"city": "Marquette", "address": "2152 US Hwy 41 W"},
+        {"city": "Escanaba", "address": "2222 North Lincoln Road"}
+      ],
+      "customizable": true,
+      "name": "locations",
+      "placeholder": "e.g. [{\"city\":\"Marquette\",\"address\":\"2152 US Hwy 41 W\"}]",
+      "required": true
+    },
+    {
+      "id": "prop:disclaimer",
+      "category": "content",
+      "label": "Disclaimer",
+      "type": "text",
+      "defaultValue": "Ashley stores are independently owned and operated. ©2024 Rogers Furniture, DBA Ashley. All rights reserved. Furniture since 1945.",
+      "customizable": true,
+      "name": "disclaimer",
+      "placeholder": "e.g. Ashley stores are independently owned and operated...",
+      "required": false
+    }
+  ],
+  "designFields": [
+    {
+      "id": "background",
+      "category": "design",
+      "label": "Background Color",
+      "type": "color",
+      "defaultValue": "#1a1008",
+      "customizable": true
+    },
+    {
+      "id": "fontFamily",
+      "category": "design",
+      "label": "Font Family",
+      "type": "font",
+      "defaultValue": "Chesna Grotesk",
+      "customizable": true
+    }
+  ],
+  "spec": {
+    "durationFrames": 150,
+    "fps": 30,
+    "width": 1920,
+    "height": 1080,
+    "background": {
+      "type": "solid",
+      "color": "#1a1008"
+    }
+  },
+  "hasPreview": true,
+  "createdAt": "2026-03-28T12:00:00.000Z"
+}

@@ -1,0 +1,132 @@
+{
+  "durationFrames": 39,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "background": {
+    "type": "solid",
+    "color": "#FFFFFF"
+  },
+  "elements": [
+    {
+      "id": "logo-group",
+      "type": "group",
+      "position": {
+        "topPercent": 37,
+        "centerHorizontal": true
+      },
+      "layout": {
+        "direction": "row",
+        "gap": 5,
+        "alignItems": "baseline"
+      },
+      "children": [
+        {
+          "id": "logo-core",
+          "type": "group",
+          "layout": {
+            "direction": "row",
+            "gap": 30,
+            "alignItems": "center"
+          },
+          "children": [
+            {
+              "id": "logo-icon",
+              "type": "svg-component",
+              "component": "AshleyHouseIcon",
+              "props": {
+                "color": "#E87722",
+                "height": 115
+              }
+            },
+            {
+              "id": "logo-wordmark",
+              "type": "svg-component",
+              "component": "AshleyWordmark",
+              "props": {
+                "color": "#333333",
+                "height": 125
+              }
+            }
+          ]
+        },
+        {
+          "id": "logo-tld",
+          "type": "text",
+          "content": ".com",
+          "style": {
+            "fontFamily": "Chesna Grotesk",
+            "fontSize": 90,
+            "fontWeight": 600,
+            "color": "#E87722"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cta",
+      "type": "text",
+      "content": "shop now!",
+      "position": {
+        "belowElement": "logo-group",
+        "marginTop": 50,
+        "centerHorizontal": true
+      },
+      "style": {
+        "fontFamily": "Chesna Grotesk",
+        "fontSize": 54,
+        "fontWeight": 400,
+        "color": "#333333",
+        "letterSpacing": 0.5,
+        "textAlign": "center",
+        "border": "2px solid #333333",
+        "borderRadius": 8,
+        "padding": "15px 80px"
+      }
+    },
+    {
+      "id": "disclaimer",
+      "type": "text",
+      "content": "©2022 Ashley Furniture Industries, LLC. All rights reserved.",
+      "isTextProp": true,
+      "propName": "disclaimer",
+      "position": {
+        "bottomPx": 45,
+        "centerHorizontal": true
+      },
+      "style": {
+        "fontFamily": "Chesna Grotesk",
+        "fontSize": 18,
+        "fontWeight": 400,
+        "color": "#595959",
+        "letterSpacing": 0.2,
+        "textAlign": "center"
+      }
+    }
+  ],
+  "animations": [
+    {
+      "targets": [
+        "logo-group",
+        "cta"
+      ],
+      "type": "fade-in",
+      "startFrame": 0,
+      "postEffect": null
+    },
+    {
+      "targets": [
+        "disclaimer"
+      ],
+      "type": "fade-in",
+      "startFrame": 3,
+      "postEffect": null
+    }
+  ],
+  "textContent": {
+    "tagline": null,
+    "disclaimer": "©2022 Ashley Furniture Industries, LLC. All rights reserved.",
+    "locations": []
+  },
+  "notes": "The CTA element 'shop now!' is visually presented as a button with a border and padding, which has been represented using non-standard style properties 'border', 'borderRadius', and 'padding'."
+}

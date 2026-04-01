@@ -1,0 +1,9 @@
+.git/
+.cursor/
+.claude/
+node_modules/
+out/
+tmp/
+.env
+public/*.mov
+public/*.mp4
