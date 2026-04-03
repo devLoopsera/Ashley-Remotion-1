@@ -106,7 +106,7 @@
       color: rgba(232,119,34,0.9); background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 3px;
       pointer-events: none; letter-spacing: 0.5px;
     }
-    .detail-name { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 4px; display: none; }
+.detail-name { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 4px; display: none; }
     .detail-name-input { font-size: 18px; font-weight: 700; color: #fff; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 6px 10px; width: 100%; margin-bottom: 4px; outline: none; font-family: inherit; }
     .detail-name-input:focus { border-color: rgba(232,119,34,0.5); }
     .detail-desc-input { font-size: 13px; color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 6px 10px; width: 100%; margin-bottom: 8px; outline: none; font-family: inherit; resize: vertical; min-height: 32px; }
@@ -376,6 +376,22 @@
             <button class="ar-tab" data-ar="1:1" data-w="1080" data-h="1080"><span class="ar-label">1:1</span><span class="ar-size">1080×1080</span></button>
             <button class="ar-tab" data-ar="4:5" data-w="1080" data-h="1350"><span class="ar-label">4:5</span><span class="ar-size">1080×1350</span></button>
           </div>
+          <!-- Frame position: video preview + draggable crop guide (shown only for non-16:9) -->
+          <div id="fork-crop-wrap" style="display:none; margin-top:10px;">
+            <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:6px;letter-spacing:0.3px;">
+              Frame Position <span style="color:rgba(255,255,255,0.2);font-size:9px;">— drag the box to frame what you want to keep</span>
+            </div>
+            <div class="preview-container" id="fork-preview-container" style="margin-bottom:4px; cursor:default;">
+              <video id="fork-preview-video" autoplay loop muted playsinline style="width:100%;display:block;border-radius:8px;"></video>
+              <img id="fork-preview-img" alt="" style="width:100%;display:none;border-radius:8px;" />
+              <div class="crop-overlay" id="fork-crop-overlay">
+                <div class="crop-guide" id="fork-crop-guide">
+                  <div class="crop-guide-label" id="fork-crop-guide-label"></div>
+                </div>
+              </div>
+            </div>
+            <div style="font-size:9px;color:rgba(255,255,255,0.2);text-align:center;">Everything inside the box will be in the final video</div>
+          </div>
           <button type="button" class="btn-fork-save" id="btn-fork-save">Save as New Template</button>
           <div id="fork-render-progress" class="detail-render-progress">
             <div style="font-size:11px;color:rgba(255,255,255,0.4);">Rendering preview...</div>
@@ -613,6 +629,9 @@
         document.getElementById('fork-render-progress').classList.remove('visible');
         document.getElementById('fork-render-log').textContent = '';
         document.querySelectorAll('#fork-aspect-ratio .ar-tab').forEach(t => t.classList.toggle('active', t.dataset.ar === '16:9'));
+        forkCropPos.xPercent = 50; forkCropPos.yPercent = 50;
+        document.getElementById('fork-crop-wrap').style.display = 'none';
+        document.getElementById('fork-crop-overlay').classList.remove('visible');
 
         // Reset aspect ratio to default 16:9 and hide crop guide
         document.querySelectorAll('#detail-aspect-ratio .ar-tab').forEach(t => t.classList.toggle('active', t.dataset.ar === '16:9'));
@@ -942,6 +961,7 @@
     // ── Aspect ratio tab switching + crop guide ─────────────────
     let cropGuidePos = {xPercent: 50, yPercent: 50}; // center by default
     let bulkCropGuidePos = {xPercent: 50, yPercent: 50};
+    let forkCropPos = {xPercent: 50, yPercent: 50};
 
     document.querySelectorAll('.ar-tabs').forEach(tabs => {
       tabs.addEventListener('click', (e) => {
@@ -951,18 +971,29 @@
         tab.classList.add('active');
         if (tabs.id === 'detail-aspect-ratio') updateCropGuide('detail');
         if (tabs.id === 'bulk-aspect-ratio') updateCropGuide('bulk');
+        if (tabs.id === 'fork-aspect-ratio') updateCropGuide('fork');
       });
     });
 
     function updateCropGuide(mode) {
+      const isFork = mode === 'fork';
       const isDetail = mode === 'detail';
-      const overlay = document.getElementById(isDetail ? 'crop-overlay' : 'bulk-crop-overlay');
-      const guide = document.getElementById(isDetail ? 'crop-guide' : 'bulk-crop-guide');
-      const label = document.getElementById(isDetail ? 'crop-guide-label' : 'bulk-crop-guide-label');
-      const container = document.getElementById(isDetail ? 'preview-container' : 'bulk-preview-container');
-      const pos = isDetail ? cropGuidePos : bulkCropGuidePos;
-      const tabsId = isDetail ? 'detail-aspect-ratio' : 'bulk-aspect-ratio';
+      const overlayId = isFork ? 'fork-crop-overlay' : isDetail ? 'crop-overlay' : 'bulk-crop-overlay';
+      const guideId = isFork ? 'fork-crop-guide' : isDetail ? 'crop-guide' : 'bulk-crop-guide';
+      const labelId = isFork ? 'fork-crop-guide-label' : isDetail ? 'crop-guide-label' : 'bulk-crop-guide-label';
+      const containerId = isFork ? 'fork-preview-container' : isDetail ? 'preview-container' : 'bulk-preview-container';
+      const tabsId = isFork ? 'fork-aspect-ratio' : isDetail ? 'detail-aspect-ratio' : 'bulk-aspect-ratio';
+      const overlay = document.getElementById(overlayId);
+      const guide = document.getElementById(guideId);
+      const label = document.getElementById(labelId);
+      const container = document.getElementById(containerId);
+      const pos = isFork ? forkCropPos : isDetail ? cropGuidePos : bulkCropGuidePos;
       const dims = getSelectedDimensions(tabsId);
+
+      if (isFork) {
+        // Show or hide the whole preview wrap
+        document.getElementById('fork-crop-wrap').style.display = dims.aspectRatio === '16:9' ? 'none' : 'block';
+      }
 
       if (dims.aspectRatio === '16:9') {
         overlay.classList.remove('visible');
@@ -1039,6 +1070,7 @@
     }
     initCropGuideDrag('crop-guide', 'preview-container', cropGuidePos);
     initCropGuideDrag('bulk-crop-guide', 'bulk-preview-container', bulkCropGuidePos);
+    initCropGuideDrag('fork-crop-guide', 'fork-preview-container', forkCropPos);
 
     function getSelectedDimensions(containerId) {
       const container = document.getElementById(containerId);
@@ -1057,6 +1089,9 @@
         } else if (containerId === 'bulk-aspect-ratio') {
           dims.cropX = bulkCropGuidePos.xPercent;
           dims.cropY = bulkCropGuidePos.yPercent;
+        } else if (containerId === 'fork-aspect-ratio') {
+          dims.cropX = forkCropPos.xPercent;
+          dims.cropY = forkCropPos.yPercent;
         } else {
           dims.cropX = 50;
           dims.cropY = 50;
@@ -1113,6 +1148,23 @@
         const displayInput = document.getElementById('fork-display-name');
         if (!nameInput.value) nameInput.value = currentDetailTemplate.name + '_Custom';
         if (!displayInput.value) displayInput.value = (currentDetailTemplate.displayName || currentDetailTemplate.name) + ' (Custom)';
+        // Reset AR to 16:9, reset crop position, hide preview
+        document.querySelectorAll('#fork-aspect-ratio .ar-tab').forEach(t => t.classList.toggle('active', t.dataset.ar === '16:9'));
+        forkCropPos.xPercent = 50; forkCropPos.yPercent = 50;
+        document.getElementById('fork-crop-wrap').style.display = 'none';
+        document.getElementById('fork-crop-overlay').classList.remove('visible');
+        // Load template preview video/img into fork preview container
+        const vid = document.getElementById('fork-preview-video');
+        const img = document.getElementById('fork-preview-img');
+        if (currentDetailTemplate.videoUrl) {
+          vid.src = currentDetailTemplate.videoUrl + '?t=' + (currentDetailTemplate.createdAt ? new Date(currentDetailTemplate.createdAt).getTime() : Date.now());
+          vid.style.display = 'block';
+          img.style.display = 'none';
+        } else if (currentDetailTemplate.previewUrl) {
+          img.src = currentDetailTemplate.previewUrl + '?t=' + (currentDetailTemplate.createdAt ? new Date(currentDetailTemplate.createdAt).getTime() : Date.now());
+          img.style.display = 'block';
+          vid.style.display = 'none';
+        }
         // Render design fields into fork panel
         await renderDesignFieldsInto('fork-design-fields', currentDetailTemplate.designFields || []);
       }
