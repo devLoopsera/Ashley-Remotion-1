@@ -33,7 +33,7 @@ export const TestHorixontal: React.FC<TestHorixontalProps> = ({locations}) => {
   });
 
   return (
-    <ScaleWrapper background="#3c479a" cropX={94.09937888198758} cropY={50}><AbsoluteFill>
+    <ScaleWrapper background="#000000" cropX={94.09937888198758} cropY={50}><AbsoluteFill>
         
       <div
         style={{

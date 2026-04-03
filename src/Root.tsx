@@ -12,7 +12,7 @@ import {EndCard03SEAASHBedAchesCustomizations202515sTVSpotRoomSceneA01V1elp7} fr
 import {Q2AGRNATPRTempurBreezeEVGTVYTMattress30sENG1080x1080Nzlmn9} from "./scenes/Generated_Q2AGRNATPRTempurBreezeEVGTVYTMattress30sENG1080x1080Nzlmn9";
 import {Dedluo} from "./scenes/Generated_Dedluo";
 import {AHSEndCardWipeTransitionVERTSPAN} from "./scenes/Generated_AHSEndCardWipeTransitionVERTSPAN";
-import {LogoValidation} from "./LogoValidation";
+import {LogoValidation} from "./LogoValidation";
 import {TestHorixontal} from "./scenes/Generated_TestHorixontal";
 
 const DEFAULT_DISCLAIMER =
