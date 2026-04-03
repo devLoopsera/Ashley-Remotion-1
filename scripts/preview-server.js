@@ -1031,10 +1031,10 @@ app.patch("/api/templates/:name", express.json(), (req, res) => {
   res.json({ok: true});
 });
 
-// ── Fork template (customize & save as new) ─────────────────────────────
+// ── Fork template (customize & save as new, with preview render) ─────────
 app.post("/api/templates/:name/fork", express.json(), (req, res) => {
   const {name} = req.params;
-  const {newName, displayName, designOverrides} = req.body || {};
+  const {newName, displayName, designOverrides, width, height, aspectRatio, cropX, cropY} = req.body || {};
   if (!newName) return res.status(400).json({error: "newName required"});
 
   const safeName = newName.replace(/[^a-zA-Z0-9_-]/g, "_").replace(/^_+|_+$/g, "") || "ForkedTemplate";
@@ -1042,54 +1042,153 @@ app.post("/api/templates/:name/fork", express.json(), (req, res) => {
   const destDir = path.join(TEMPLATES_DIR, safeName);
 
   if (!fs.existsSync(path.join(srcDir, "template.json"))) {
-    return res.status(404).json({error: `Template "${name}" not found`});
+    return res.status(400).json({error: `Template "${name}" not found`});
   }
   if (fs.existsSync(destDir)) {
     return res.status(409).json({error: `Template "${safeName}" already exists. Choose a different name.`});
   }
 
-  try {
-    fs.mkdirSync(destDir, {recursive: true});
-    for (const file of fs.readdirSync(srcDir)) {
-      fs.copyFileSync(path.join(srcDir, file), path.join(destDir, file));
+  // SSE setup
+  res.writeHead(200, {"Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive"});
+  const send = (data) => res.write(`data: ${JSON.stringify(data)}\n\n`);
+
+  (async () => {
+    try {
+      // ── 1. Copy template directory (excluding component — handled separately) ─
+      send({type: "log", text: "Creating forked template..."});
+      fs.mkdirSync(destDir, {recursive: true});
+      for (const file of fs.readdirSync(srcDir)) {
+        fs.copyFileSync(path.join(srcDir, file), path.join(destDir, file));
+      }
+
+      const manifest = JSON.parse(fs.readFileSync(path.join(destDir, "template.json"), "utf8"));
+      manifest.name = safeName;
+      if (displayName) manifest.displayName = displayName;
+      manifest.forkedFrom = name;
+      manifest.createdAt = new Date().toISOString();
+
+      // Update designFields defaults in manifest to reflect overrides
+      if (designOverrides && Object.keys(designOverrides).length > 0) {
+        const dfs = manifest.designFields || [];
+        const bgType = designOverrides.backgroundType || "solid";
+        if (designOverrides.background) {
+          const f = dfs.find(f => f.id === "background");
+          if (f) f.defaultValue = designOverrides.background;
+          if (manifest.spec?.background && bgType === "solid") manifest.spec.background.color = designOverrides.background;
+        }
+        if (designOverrides.fontFamily) {
+          const f = dfs.find(f => f.id === "fontFamily");
+          if (f) f.defaultValue = designOverrides.fontFamily;
+        }
+        if (designOverrides.logo) {
+          const f = dfs.find(f => f.id === "logo");
+          if (f) f.defaultValue = designOverrides.logo;
+        }
+        if (manifest.spec) {
+          fs.writeFileSync(path.join(destDir, "spec.json"), JSON.stringify(manifest.spec, null, 2));
+        }
+      }
+
+      fs.writeFileSync(path.join(destDir, "template.json"), JSON.stringify(manifest, null, 2));
+
+      // ── 2. Set up scenes component — same order as render-from-template ──────
+      // Copy CLEAN original component to scenes first, then apply overrides
+      send({type: "log", text: "Setting up component..."});
+      ensureTemplateComponent(safeName, manifest);
+      const scenesComponentPath = path.join(SCENES_DIR, `Generated_${manifest.sourceComponent}.tsx`);
+
+      // ── 3. Apply design overrides to scenes file (mirrors render-from-template) ─
+      if (designOverrides && Object.keys(designOverrides).length > 0) {
+        send({type: "log", text: "Applying design overrides..."});
+        applyDesignOverrides(scenesComponentPath, manifest, designOverrides);
+      }
+
+      // ── 4. Inject ScaleWrapper for non-default aspect ratios ────────────────
+      const needsScale = width && height && (width !== 1920 || height !== 1080);
+      if (needsScale) {
+        send({type: "log", text: `Applying ${aspectRatio || width + "x" + height} aspect ratio...`});
+        injectScaleWrapper(scenesComponentPath, cropX ?? 50, cropY ?? 50);
+      }
+
+      // ── 5. Save the fully-patched scenes file back as the template's component ─
+      // This ensures the template's component.tsx reflects all overrides + scale
+      fs.copyFileSync(scenesComponentPath, path.join(destDir, "component.tsx"));
+
+      // ── 6. Render preview video ─────────────────────────────────
+      send({type: "log", text: "Rendering preview video..."});
+      const vars = manifest.variables || [];
+      const props = buildPropsFromVariables(vars, {});
+      if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, {recursive: true});
+
+      const timestamp = Date.now();
+      const isTransparent = designOverrides && designOverrides.backgroundType === "transparent";
+      const outputExt = isTransparent ? ".webm" : ".mp4";
+      const arLabel = aspectRatio && aspectRatio !== "16:9" ? `_${aspectRatio.replace(":", "x")}` : "";
+      const outputFile = `${manifest.sourceComponent}_fork_${timestamp}${outputExt}`;
+      const outputPath = path.join(OUT_DIR, outputFile);
+      const propsFile = path.join(TMP_DIR, `.fork-props-${timestamp}.json`);
+      fs.writeFileSync(propsFile, JSON.stringify(props));
+
+      const codecFlags = isTransparent ? " --codec=vp8 --image-format=png" : "";
+      const dimFlags = needsScale ? ` --width=${width} --height=${height}` : "";
+      const cmd = `node node_modules/@remotion/cli/remotion-cli.js render src/index.ts ${manifest.sourceComponent} "${outputPath.replace(/\\/g, "/")}" --props="${propsFile.replace(/\\/g, "/")}"${codecFlags}${dimFlags}`;
+
+      await new Promise((resolve, reject) => {
+        const child = exec(cmd, {cwd: path.resolve(__dirname, "..")});
+        child.stdout.on("data", (d) => send({type: "log", text: d.toString().trim()}));
+        child.stderr.on("data", (d) => send({type: "log", text: d.toString().trim()}));
+        child.on("close", (code) => {
+          try { fs.unlinkSync(propsFile); } catch {}
+          if (code === 0) resolve();
+          else reject(new Error(`Render failed with exit code ${code}`));
+        });
+      });
+
+      // ── 7. Copy rendered video into template dir as preview ─────
+      const previewDest = path.join(destDir, `rendered${outputExt}`);
+      fs.copyFileSync(outputPath, previewDest);
+      // Remove old reference and any conflicting rendered files so the new one is used
+      for (const old of ["reference.mp4", "reference.mov", "reference.webm"]) {
+        try { fs.unlinkSync(path.join(destDir, old)); } catch {}
+      }
+      // Remove any previously rendered file with a different extension
+      for (const ext of [".mp4", ".webm", ".mov"]) {
+        if (ext !== outputExt) {
+          try { fs.unlinkSync(path.join(destDir, `rendered${ext}`)); } catch {}
+        }
+      }
+      // Clean up out/ file
+      try { fs.unlinkSync(outputPath); } catch {}
+
+      // ── 8. Extract a still frame for the card thumbnail ─────────
+      // For transparent renders, composite against white so the thumbnail isn't black
+      send({type: "log", text: "Extracting thumbnail..."});
+      try {
+        const ffmpegBin = path.join(__dirname, "..", "node_modules", "@remotion", "compositor-win32-x64-msvc", "ffmpeg.exe");
+        const thumbPath = path.join(TMP_DIR, `fork-thumb-${Date.now()}.png`);
+        // Remotion's bundled ffmpeg has limited filters — use simple extraction for all cases
+        // PNG output preserves alpha channel; browser renders transparent areas with page background
+        const ffmpegCmd = `"${ffmpegBin}" -ss 1 -i "${previewDest.replace(/\\/g, "/")}" -frames:v 1 -q:v 2 -y "${thumbPath.replace(/\\/g, "/")}"`;
+        void isTransparent; // handled via PNG alpha
+        execSync(ffmpegCmd, {stdio: "pipe"});
+        if (fs.existsSync(thumbPath)) {
+          for (const old of ["reference.png", "reference.jpg", "reference.jpeg", "reference.webp"]) {
+            try { fs.unlinkSync(path.join(destDir, old)); } catch {}
+          }
+          fs.copyFileSync(thumbPath, path.join(destDir, "reference.png"));
+          try { fs.unlinkSync(thumbPath); } catch {}
+        }
+      } catch (thumbErr) {
+        console.warn("[fork] Thumbnail extraction failed:", thumbErr.message);
+      }
+
+      send({type: "done", name: safeName, displayName: manifest.displayName});
+    } catch (err) {
+      try { fs.rmSync(destDir, {recursive: true, force: true}); } catch {}
+      send({type: "error", message: err.message});
     }
-
-    const manifest = JSON.parse(fs.readFileSync(path.join(destDir, "template.json"), "utf8"));
-    manifest.name = safeName;
-    if (displayName) manifest.displayName = displayName;
-    manifest.forkedFrom = name;
-    manifest.createdAt = new Date().toISOString();
-
-    // Apply overrides to the copied component
-    if (designOverrides && Object.keys(designOverrides).length > 0) {
-      const componentPath = path.join(destDir, "component.tsx");
-      applyDesignOverrides(componentPath, manifest, designOverrides);
-
-      // Update designFields defaults to reflect new values
-      const dfs = manifest.designFields || [];
-      const bgType = designOverrides.backgroundType || "solid";
-      if (designOverrides.background) {
-        const f = dfs.find(f => f.id === "background");
-        if (f) f.defaultValue = designOverrides.background;
-        if (manifest.spec?.background && bgType === "solid") manifest.spec.background.color = designOverrides.background;
-      }
-      if (designOverrides.fontFamily) {
-        const f = dfs.find(f => f.id === "fontFamily");
-        if (f) f.defaultValue = designOverrides.fontFamily;
-      }
-      if (designOverrides.logo) {
-        const f = dfs.find(f => f.id === "logo");
-        if (f) f.defaultValue = designOverrides.logo;
-      }
-      fs.writeFileSync(path.join(destDir, "spec.json"), JSON.stringify(manifest.spec, null, 2));
-    }
-
-    fs.writeFileSync(path.join(destDir, "template.json"), JSON.stringify(manifest, null, 2));
-    res.json({ok: true, name: safeName, displayName: manifest.displayName});
-  } catch (err) {
-    try { fs.rmSync(destDir, {recursive: true, force: true}); } catch {}
-    res.status(500).json({error: err.message});
-  }
+    res.end();
+  })();
 });
 
 // ── Render from template (single) ───────────────────────────────────────
@@ -1171,65 +1270,54 @@ function applyDesignOverrides(componentPath, manifest, designOverrides) {
 
   // Background override — supports solid color, image, video, transparent
   const bgType = designOverrides.backgroundType || "solid";
-  if (designOverrides.background && spec.background) {
-    const oldColor = spec.background.color || "#000000";
-    const escapedOld = oldColor.replace('#', '\\#');
 
+  // Transparent can run without a background value — handle it first
+  if (bgType === "transparent") {
+    code = code.replace(/backgroundColor:\s*['"][^'"]+['"]/gi, `backgroundColor: 'transparent'`);
+    code = code.replace(/(<ScaleWrapper[^>]*)\bbackground=["'][^"']*["']/g, '$1background="transparent"');
+    // Remove any previously injected background Img/Video media elements
+    code = code.replace(/<(?:Img|Video)\s+src=\{staticFile\('[^']*'\)\}\s+style=\{\{width:'100%',height:'100%',objectFit:'cover',position:'absolute'\}\}\s*\/>/g, '');
+  } else if (designOverrides.background) {
     if (bgType === "solid") {
-      if (designOverrides.background !== oldColor) {
-        code = code.replace(
-          new RegExp(`backgroundColor:\\s*['"]${escapedOld}['"]`, "gi"),
-          `backgroundColor: '${designOverrides.background}'`
-        );
-      }
-    } else if (bgType === "transparent") {
-      code = code.replace(
-        new RegExp(`backgroundColor:\\s*['"]${escapedOld}['"]`, "gi"),
-        `backgroundColor: 'transparent'`
-      );
+      // Remove any previously injected background media elements
+      code = code.replace(/<(?:Img|Video)\s+src=\{staticFile\('[^']*'\)\}\s+style=\{\{width:'100%',height:'100%',objectFit:'cover',position:'absolute'\}\}\s*\/>/g, '');
+      // Replace any existing backgroundColor generically (don't depend on old color matching spec)
+      code = code.replace(/backgroundColor:\s*['"][^'"]*['"]/gi, `backgroundColor: '${designOverrides.background}'`);
+      // Also update ScaleWrapper background prop if present
+      code = code.replace(/(<ScaleWrapper[^>]*)\bbackground=["'][^"']*["']/g, `$1background="${designOverrides.background}"`);
     } else if (bgType === "image" || bgType === "video") {
       const asset = designOverrides.background;
       const isVideo = bgType === "video";
       const remotionTag = isVideo ? "Video" : "Img";
       const importName = isVideo ? "Video" : "Img";
 
-      // Add import if not already present
-      if (!code.includes(`${importName},`) && !code.includes(`${importName} }`) && !code.includes(`${importName}}`)) {
-        code = code.replace(
-          /from\s*['"]remotion['"]/,
-          (match) => {
-            const insertImport = `, ${importName}`;
-            return match.replace("from", `${insertImport}} from`).replace("}", "");
-          }
-        );
-        // Simpler: just ensure the import line includes it
-        if (!code.includes(`import {`) || !code.includes(importName)) {
+      // Add Img/Video and staticFile imports if not already present
+      const importsNeeded = [importName, 'staticFile'];
+      for (const imp of importsNeeded) {
+        if (!code.includes(imp)) {
           code = code.replace(
             /import\s*\{([^}]+)\}\s*from\s*['"]remotion['"]/,
             (match, imports) => {
-              if (imports.includes(importName)) return match;
-              return match.replace(imports, `${imports.trim()}, ${importName}`);
+              if (imports.includes(imp)) return match;
+              const cleaned = imports.replace(/,\s*$/, '').trim();
+              return match.replace(imports, `${cleaned}, ${imp}`);
             }
           );
         }
       }
 
-      // Replace the backgroundColor AbsoluteFill with a media background
-      // Pattern: <AbsoluteFill style={{backgroundColor: '#xxx'}}>
-      const bgRegex = new RegExp(
-        `(<AbsoluteFill\\s+style=\\{\\{\\s*backgroundColor:\\s*['"]${escapedOld}['"]\\s*\\}\\})>`,
-        "i"
-      );
       const mediaElement = `<${remotionTag} src={staticFile('${asset}')} style={{width:'100%',height:'100%',objectFit:'cover',position:'absolute'}} />`;
-      if (bgRegex.test(code)) {
-        code = code.replace(bgRegex, `<AbsoluteFill>\n        ${mediaElement}`);
+      // Replace <AbsoluteFill style={{backgroundColor: '...'}}>  with plain <AbsoluteFill> + media element
+      const bgAbsFillRegex = /<AbsoluteFill\s+style=\{\{\s*backgroundColor:\s*['"][^'"]*['"]\s*\}\}>/i;
+      if (bgAbsFillRegex.test(code)) {
+        code = code.replace(bgAbsFillRegex, `<AbsoluteFill>\n        ${mediaElement}`);
       } else {
-        // Fallback: just replace backgroundColor value and add media element after the opening tag
-        code = code.replace(
-          new RegExp(`backgroundColor:\\s*['"]${escapedOld}['"]`, "gi"),
-          `backgroundColor: 'transparent'`
-        );
+        // Fallback: make backgroundColor transparent and inject media element after <AbsoluteFill>
+        code = code.replace(/backgroundColor:\s*['"][^'"]*['"]/gi, `backgroundColor: 'transparent'`);
+        code = code.replace(/<AbsoluteFill>/i, `<AbsoluteFill>\n        ${mediaElement}`);
       }
+      // Update ScaleWrapper background prop if present
+      code = code.replace(/(<ScaleWrapper[^>]*)\bbackground=["'][^"']*["']/g, `$1background="transparent"`);
     }
   }
 

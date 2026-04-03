@@ -1,10 +1,13 @@
 import React from 'react';
-import {AbsoluteFill,
+import {
+  AbsoluteFill,
   spring,
   useCurrentFrame,
-  useVideoConfig, Img, staticFile} from 'remotion';
+  useVideoConfig,
+} from 'remotion';
 import {AshleyHouseIcon, AshleyWordmark} from '../components/logo';
 import {CHESNA, useFonts} from '../loadFonts';
+import {ScaleWrapper} from '../components/ScaleWrapper';
 
 export type TestHorixontalProps = {
   locations: {
@@ -32,8 +35,7 @@ export const TestHorixontal: React.FC<TestHorixontalProps> = ({locations}) => {
   });
 
   return (
-    <AbsoluteFill>
-        <Img src={staticFile('bg-1775139887461.png')} style={{width:'100%',height:'100%',objectFit:'cover',position:'absolute'}} />
+    <ScaleWrapper background="#2b9ec5" cropX={50} cropY={50}><AbsoluteFill style={{backgroundColor: '#2b9ec5'}}>
       <div
         style={{
           position: 'absolute',
@@ -122,6 +124,5 @@ export const TestHorixontal: React.FC<TestHorixontalProps> = ({locations}) => {
           ))}
         </div>
       </div>
-    </AbsoluteFill>
-  );
+    </AbsoluteFill></ScaleWrapper>);
 };

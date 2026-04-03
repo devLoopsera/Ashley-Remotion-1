@@ -1,0 +1,211 @@
+{
+  "name": "Clean_White_End_Card_with_Fading_Logo_new_template__Custom__solid_color_4_5",
+  "displayName": "Clean White End Card with Fading Logo new template (Custom) solid color 4:5",
+  "category": "promo",
+  "description": "This end card features a clean white background with a fading logo and location information. It's perfect for displaying store addresses and phone numbers at the end of a video.",
+  "sourceComponent": "TestHorixontal",
+  "variables": [
+    {
+      "id": "prop:locations",
+      "category": "content",
+      "label": "Store Locations",
+      "type": "locations",
+      "defaultValue": [
+        {
+          "address": "Street Address",
+          "city": "City, State Zip",
+          "phone": "(000) 000-0000"
+        }
+      ],
+      "customizable": true,
+      "name": "locations",
+      "placeholder": "e.g. [{\"address\":\"Street Address\",\"city\":\"City, State Zip\",\"phone\":\"(000) 000-00",
+      "required": true
+    }
+  ],
+  "designFields": [
+    {
+      "id": "background",
+      "category": "design",
+      "label": "Background",
+      "type": "color",
+      "defaultValue": "#60c729",
+      "customizable": true
+    },
+    {
+      "id": "color:address",
+      "category": "design",
+      "label": "address color",
+      "type": "color",
+      "defaultValue": "#333333",
+      "customizable": true
+    },
+    {
+      "id": "fontFamily",
+      "category": "design",
+      "label": "Font Family",
+      "type": "font",
+      "defaultValue": "Chesna Grotesk",
+      "customizable": true
+    },
+    {
+      "id": "color:city",
+      "category": "design",
+      "label": "city color",
+      "type": "color",
+      "defaultValue": "#333333",
+      "customizable": true
+    },
+    {
+      "id": "color:phone",
+      "category": "design",
+      "label": "phone color",
+      "type": "color",
+      "defaultValue": "#333333",
+      "customizable": true
+    }
+  ],
+  "spec": {
+    "durationFrames": 68,
+    "fps": 30,
+    "width": 1920,
+    "height": 1080,
+    "background": {
+      "type": "solid",
+      "color": "#60c729"
+    },
+    "elements": [
+      {
+        "id": "logo-group",
+        "type": "group",
+        "position": {
+          "topPercent": 25.185185185185187,
+          "leftPx": 959
+        },
+        "children": [
+          {
+            "id": "logo-icon",
+            "type": "svg-component",
+            "component": "AshleyHouseIcon",
+            "props": {
+              "color": "#E87722",
+              "height": 151
+            }
+          },
+          {
+            "id": "logo-wordmark",
+            "type": "svg-component",
+            "component": "AshleyWordmark",
+            "props": {
+              "color": "#333333",
+              "height": 110
+            }
+          }
+        ],
+        "layout": {
+          "direction": "column",
+          "gap": 20,
+          "alignItems": "center"
+        }
+      },
+      {
+        "id": "locations",
+        "type": "group",
+        "isArrayProp": true,
+        "propName": "locations",
+        "position": {
+          "belowElement": "logo-group",
+          "marginTop": 52,
+          "leftPx": 960
+        },
+        "layout": {
+          "direction": "row",
+          "gap": 60,
+          "alignItems": "flex-start"
+        },
+        "itemTemplate": {
+          "type": "group",
+          "layout": {
+            "direction": "column",
+            "gap": 15,
+            "alignItems": "flex-start"
+          },
+          "children": [
+            {
+              "id": "address",
+              "type": "text",
+              "propPath": "address",
+              "style": {
+                "fontFamily": "Chesna Grotesk",
+                "fontSize": 64,
+                "fontWeight": 600,
+                "color": "#333333",
+                "letterSpacing": 0,
+                "textAlign": "left"
+              }
+            },
+            {
+              "id": "city",
+              "type": "text",
+              "propPath": "city",
+              "style": {
+                "fontFamily": "Chesna Grotesk",
+                "fontSize": 64,
+                "fontWeight": 600,
+                "color": "#333333",
+                "letterSpacing": 0,
+                "textAlign": "left"
+              }
+            },
+            {
+              "id": "phone",
+              "type": "text",
+              "propPath": "phone",
+              "style": {
+                "fontFamily": "Chesna Grotesk",
+                "fontSize": 64,
+                "fontWeight": 600,
+                "color": "#333333",
+                "letterSpacing": 0,
+                "textAlign": "left"
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "animations": [
+      {
+        "targets": [
+          "logo-group"
+        ],
+        "type": "fade-in",
+        "startFrame": 3,
+        "postEffect": null
+      },
+      {
+        "targets": [
+          "locations"
+        ],
+        "type": "fade-in",
+        "startFrame": 9,
+        "postEffect": null
+      }
+    ],
+    "textContent": {
+      "tagline": null,
+      "disclaimer": null,
+      "locations": [
+        {
+          "address": "Street Address",
+          "city": "City, State Zip",
+          "phone": "(000) 000-0000"
+        }
+      ]
+    },
+    "notes": "The placeholder text is being treated as a single location for the purpose of populating textContent, but the array structure is maintained for dynamic data."
+  },
+  "hasPreview": true,
+  "createdAt": "2026-04-03T06:11:19.470Z",
+  "forkedFrom": "Clean_White_End_Card_with_Fading_Logo_new_template__Custom__solid_color_16_9"
+}

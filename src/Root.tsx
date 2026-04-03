@@ -5,15 +5,14 @@ import {EndCard24682} from "./scenes/EndCard24682";
 import {EndCard24712} from "./scenes/EndCard24712";
 import {EndCardTemplate} from "./scenes/EndCardTemplate";
 import {FPS, TOTAL_FRAMES} from "./constants";
-import {DelRioCard} from "./scenes/Generated_DelRioCard";
-import {TestCard} from "./scenes/Generated_TestCard";
+import {DelRioCard} from "./scenes/Generated_DelRioCard";
 import {Q2AHSNATMemorialDayWeek4SocialHorzVideo15169FurnUq5fi9} from "./scenes/Generated_Q2AHSNATMemorialDayWeek4SocialHorzVideo15169FurnUq5fi9";
 import {EndCard02TEMASHLDECustomSupportTVTemplate15sA01Xnwae9} from "./scenes/Generated_EndCard02TEMASHLDECustomSupportTVTemplate15sA01Xnwae9";
 import {EndCard03SEAASHBedAchesCustomizations202515sTVSpotRoomSceneA01V1elp7} from "./scenes/Generated_EndCard03SEAASHBedAchesCustomizations202515sTVSpotRoomSceneA01V1elp7";
 import {Q2AGRNATPRTempurBreezeEVGTVYTMattress30sENG1080x1080Nzlmn9} from "./scenes/Generated_Q2AGRNATPRTempurBreezeEVGTVYTMattress30sENG1080x1080Nzlmn9";
 import {Dedluo} from "./scenes/Generated_Dedluo";
 import {AHSEndCardWipeTransitionVERTSPAN} from "./scenes/Generated_AHSEndCardWipeTransitionVERTSPAN";
-import {LogoValidation} from "./LogoValidation";
+import {LogoValidation} from "./LogoValidation";
 import {TestHorixontal} from "./scenes/Generated_TestHorixontal";
 
 const DEFAULT_DISCLAIMER =
@@ -78,24 +77,6 @@ export const RemotionRoot: React.FC = () => {
                     }
           ],
           disclaimer: "Ashley stores are independently owned and operated. ©2026 PLR FURNITURE, INC., DBA Ashley. All rights reserved. Expiration date 3/31/2026.",
-        }}
-      />
-      <Composition
-        id="TestCard"
-        component={TestCard}
-        durationInFrames={150}
-        fps={30}
-        width={1920}
-        height={1080}
-        defaultProps={{
-          tagline: "Shop More Deals In-Store",
-          locations: [
-                    {
-                              "city": "City Name",
-                              "address": "Street Address"
-                    }
-          ],
-          disclaimer: "Ashley stores are independently owned and operated. ©2024 Rogers Furniture, DBA Ashley. All rights reserved. Furniture since 1945.",
         }}
       />
       <Composition
@@ -195,7 +176,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="TestHorixontal"
         component={TestHorixontal}
-        durationInFrames={72}
+        durationInFrames={68}
         fps={30}
         width={1920}
         height={1080}

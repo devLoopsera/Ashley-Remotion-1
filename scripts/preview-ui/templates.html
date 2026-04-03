@@ -59,6 +59,7 @@
     .tpl-card:hover { border-color: rgba(255,255,255,0.25); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
     .tpl-card-thumb { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; background: rgba(0,0,0,0.3); }
     .tpl-card-video { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: none; background: rgba(0,0,0,0.3); }
+    .tpl-card-video.transparent-bg { background: #ffffff; }
     .tpl-card.has-video:hover .tpl-card-thumb { display: none; }
     .tpl-card.has-video:hover .tpl-card-video { display: block; }
     .tpl-card-no-thumb { width: 100%; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.1); font-size: 36px; }
@@ -368,7 +369,18 @@
           </div>
           <div class="detail-section-label fork-section-label">Design Overrides</div>
           <div id="fork-design-fields"></div>
+          <div class="detail-section-label fork-section-label">Aspect Ratio</div>
+          <div class="ar-tabs" id="fork-aspect-ratio">
+            <button class="ar-tab active" data-ar="16:9" data-w="1920" data-h="1080"><span class="ar-label">16:9</span><span class="ar-size">1920×1080</span></button>
+            <button class="ar-tab" data-ar="9:16" data-w="1080" data-h="1920"><span class="ar-label">9:16</span><span class="ar-size">1080×1920</span></button>
+            <button class="ar-tab" data-ar="1:1" data-w="1080" data-h="1080"><span class="ar-label">1:1</span><span class="ar-size">1080×1080</span></button>
+            <button class="ar-tab" data-ar="4:5" data-w="1080" data-h="1350"><span class="ar-label">4:5</span><span class="ar-size">1080×1350</span></button>
+          </div>
           <button type="button" class="btn-fork-save" id="btn-fork-save">Save as New Template</button>
+          <div id="fork-render-progress" class="detail-render-progress">
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);">Rendering preview...</div>
+            <div class="detail-render-log" id="fork-render-log"></div>
+          </div>
           <div id="fork-status" class="fork-status-row"></div>
         </div>
       </div>
@@ -504,9 +516,9 @@
         card.innerHTML = `
           <button class="tpl-card-delete" title="Delete template">&times; Delete</button>
           ${tpl.previewUrl
-            ? `<img class="tpl-card-thumb" src="${tpl.previewUrl}" alt="${tpl.displayName}" loading="lazy" />`
+            ? `<img class="tpl-card-thumb" src="${tpl.previewUrl}?t=${tpl.createdAt ? new Date(tpl.createdAt).getTime() : Date.now()}" alt="${tpl.displayName}" loading="lazy" />`
             : `<div class="tpl-card-no-thumb">&#x1F3AC;</div>`}
-          ${tpl.videoUrl ? `<video class="tpl-card-video" src="${tpl.videoUrl}" muted loop playsinline preload="none"></video>` : ''}
+          ${tpl.videoUrl ? `<video class="tpl-card-video${tpl.videoUrl.includes('.webm') ? ' transparent-bg' : ''}" src="${tpl.videoUrl}?t=${tpl.createdAt ? new Date(tpl.createdAt).getTime() : Date.now()}" muted loop playsinline preload="none"></video>` : ''}
           <div class="tpl-card-body">
             <div class="tpl-card-name">${tpl.displayName || tpl.name}</div>
             <div class="tpl-card-desc">${tpl.description || 'No description'}</div>
@@ -598,6 +610,9 @@
         document.getElementById('fork-display-name').value = '';
         document.getElementById('fork-status').textContent = '';
         document.getElementById('fork-design-fields').innerHTML = '';
+        document.getElementById('fork-render-progress').classList.remove('visible');
+        document.getElementById('fork-render-log').textContent = '';
+        document.querySelectorAll('#fork-aspect-ratio .ar-tab').forEach(t => t.classList.toggle('active', t.dataset.ar === '16:9'));
 
         // Reset aspect ratio to default 16:9 and hide crop guide
         document.querySelectorAll('#detail-aspect-ratio .ar-tab').forEach(t => t.classList.toggle('active', t.dataset.ar === '16:9'));
@@ -1042,6 +1057,9 @@
         } else if (containerId === 'bulk-aspect-ratio') {
           dims.cropX = bulkCropGuidePos.xPercent;
           dims.cropY = bulkCropGuidePos.yPercent;
+        } else {
+          dims.cropX = 50;
+          dims.cropY = 50;
         }
       }
       return dims;
@@ -1105,29 +1123,54 @@
       const newName = document.getElementById('fork-name').value.trim().replace(/\s+/g, '_');
       const displayName = document.getElementById('fork-display-name').value.trim();
       const statusEl = document.getElementById('fork-status');
+      const progressDiv = document.getElementById('fork-render-progress');
+      const logDiv = document.getElementById('fork-render-log');
       const btn = document.getElementById('btn-fork-save');
 
       if (!newName) { statusEl.className = 'fork-status-row fork-status-err'; statusEl.textContent = 'Template name is required.'; return; }
 
       const designOverrides = collectDesignOverridesFrom('fork-design-fields');
+      const dims = getSelectedDimensions('fork-aspect-ratio');
       btn.disabled = true;
-      btn.textContent = 'Saving...';
+      btn.textContent = 'Rendering...';
       statusEl.className = 'fork-status-row';
       statusEl.textContent = '';
+      progressDiv.classList.add('visible');
+      logDiv.textContent = '';
 
       try {
         const resp = await fetch(`/api/templates/${currentDetailTemplate.name}/fork`, {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({newName, displayName, designOverrides}),
+          body: JSON.stringify({newName, displayName, designOverrides, ...dims}),
         });
-        const result = await resp.json();
-        if (result.error) throw new Error(result.error);
+
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let result = null;
+        while (true) {
+          const {done, value} = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, {stream: true});
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            let msg;
+            try { msg = JSON.parse(line.slice(6)); } catch { continue; }
+            if (msg.type === 'log') { logDiv.textContent += msg.text + '\n'; logDiv.scrollTop = logDiv.scrollHeight; }
+            else if (msg.type === 'done') { result = msg; }
+            else if (msg.type === 'error') { throw new Error(msg.message); }
+          }
+        }
+        if (!result) throw new Error('No response from server');
+        progressDiv.classList.remove('visible');
         statusEl.className = 'fork-status-row fork-status-ok';
         statusEl.textContent = `Saved as "${result.displayName || result.name}".`;
-        // Refresh grid so the new template appears
         await loadTemplates();
       } catch (err) {
+        progressDiv.classList.remove('visible');
         statusEl.className = 'fork-status-row fork-status-err';
         statusEl.textContent = err.message;
       } finally {
