@@ -152,6 +152,9 @@
     .preview-item-thumb { width: 40px; height: 40px; object-fit: contain; border-radius: 3px; flex-shrink: 0; background: rgba(0,0,0,0.3); }
     .preview-item-vid { width: 56px; height: 32px; object-fit: cover; border-radius: 3px; flex-shrink: 0; background: rgba(0,0,0,0.3); }
     .preview-item-name { flex: 1; font-size: 11px; color: rgba(255,255,255,0.7); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .preview-item-delete { flex-shrink: 0; width: 18px; height: 18px; border-radius: 50%; border: none; background: rgba(255,60,60,0.0); color: rgba(255,100,100,0.4); font-size: 13px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; transition: all 0.15s; }
+    .preview-item-delete:hover { background: rgba(255,60,60,0.2); color: rgba(255,100,100,0.9); }
+    .font-upload-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
     textarea.var-input { resize: vertical; min-height: 34px; font-family: inherit; line-height: 1.4; overflow: hidden; }
 
     /* ── Background type selector ── */
@@ -728,7 +731,7 @@
      * @returns {HTMLElement} the dropdown container element
      */
     function createPreviewDropdown(opts) {
-      const { items, defaultValue, dataField, placeholder, thumbClass, isVideo } = opts;
+      const { items, defaultValue, dataField, placeholder, thumbClass, isVideo, onDelete } = opts;
       const wrap = document.createElement('div');
       wrap.className = 'preview-dropdown';
       wrap.dataset.designField = dataField;
@@ -763,7 +766,6 @@
         if (item.thumbUrl) {
           if (isVideo) {
             el.innerHTML = `<video class="${itemThumbCls}" src="${item.thumbUrl}" muted preload="metadata"></video><span class="preview-item-name">${item.label}</span>`;
-            // Show a frame on hover
             const vid = el.querySelector('video');
             el.addEventListener('mouseenter', () => { vid.currentTime = 0.5; });
           } else {
@@ -771,6 +773,17 @@
           }
         } else {
           el.innerHTML = `<span class="preview-item-name">${item.label}</span>`;
+        }
+        if (onDelete) {
+          const delBtn = document.createElement('button');
+          delBtn.className = 'preview-item-delete';
+          delBtn.title = 'Delete';
+          delBtn.innerHTML = '&times;';
+          delBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            onDelete(item, el, wrap);
+          });
+          el.appendChild(delBtn);
         }
         list.appendChild(el);
       }
@@ -816,6 +829,43 @@
       document.addEventListener('click', () => { list.classList.remove('open'); sel.classList.remove('open'); });
 
       return wrap;
+    }
+
+    // Adds a delete button for a font option inside fontSelect.
+    // The button is stored as a data attr map keyed by font name so we don't double-add.
+    function addFontDeleteBtn(fontSelect, fontName, container) {
+      if (!fontSelect._deleteBtns) fontSelect._deleteBtns = {};
+      if (fontSelect._deleteBtns[fontName]) return; // already added
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.title = `Delete font "${fontName}"`;
+      btn.dataset.fontDelete = fontName;
+      btn.style.cssText = 'flex-shrink:0;width:22px;height:22px;border-radius:50%;border:none;background:rgba(255,60,60,0);color:rgba(255,100,100,0.4);font-size:14px;line-height:1;cursor:pointer;display:none;align-items:center;justify-content:center;padding:0;transition:all 0.15s;';
+      btn.innerHTML = '&times;';
+      btn.addEventListener('mouseenter', () => { btn.style.background = 'rgba(255,60,60,0.2)'; btn.style.color = 'rgba(255,100,100,0.9)'; });
+      btn.addEventListener('mouseleave', () => { btn.style.background = 'rgba(255,60,60,0)'; btn.style.color = 'rgba(255,100,100,0.4)'; });
+      btn.addEventListener('click', async () => {
+        if (!confirm(`Delete font "${fontName}"?`)) return;
+        const r = await fetch(`/api/assets/font/${encodeURIComponent(fontName)}`, {method: 'DELETE'});
+        const result = await r.json();
+        if (result.error) { alert(result.error); return; }
+        cachedAssets = null;
+        // Remove option from select
+        [...fontSelect.options].forEach(o => { if (o.value === fontName) o.remove(); });
+        if (fontSelect.value === fontName) fontSelect.value = '';
+        btn.remove();
+        delete fontSelect._deleteBtns[fontName];
+      });
+      fontSelect._deleteBtns[fontName] = btn;
+      container.appendChild(btn);
+      // Show/hide delete btn based on what's selected in fontSelect
+      fontSelect.addEventListener('change', () => {
+        Object.entries(fontSelect._deleteBtns || {}).forEach(([name, b]) => {
+          b.style.display = fontSelect.value === name ? 'flex' : 'none';
+        });
+      });
+      // Show immediately if this font is currently selected
+      if (fontSelect.value === fontName) btn.style.display = 'flex';
     }
 
     async function renderDesignFieldsInto(containerId, designFields) {
@@ -880,6 +930,18 @@
             items: (assets.bgImages || []).map(b => ({ value: b, label: b, thumbUrl: `/public/${b}` })),
             defaultValue: '', dataField: 'background-image',
             placeholder: '— Select background image —',
+            onDelete: async (item, el, dropdown) => {
+              if (!confirm(`Delete "${item.value}"?`)) return;
+              const r = await fetch(`/api/assets/bg/${encodeURIComponent(item.value)}`, {method: 'DELETE'});
+              const result = await r.json();
+              if (result.error) { alert(result.error); return; }
+              cachedAssets = null;
+              el.remove();
+              if (dropdown._value === item.value) {
+                dropdown._value = '';
+                dropdown.querySelector('.preview-selected').innerHTML = '<span class="preview-selected-text">— Select background image —</span><span class="preview-selected-arrow">&#x25BC;</span>';
+              }
+            },
           });
           bgImgSlot.appendChild(bgImgDropdown);
 
@@ -889,6 +951,18 @@
             items: (assets.bgVideos || []).map(b => ({ value: b, label: b, thumbUrl: `/public/${b}` })),
             defaultValue: '', dataField: 'background-video',
             placeholder: '— Select background video —', isVideo: true,
+            onDelete: async (item, el, dropdown) => {
+              if (!confirm(`Delete "${item.value}"?`)) return;
+              const r = await fetch(`/api/assets/bg/${encodeURIComponent(item.value)}`, {method: 'DELETE'});
+              const result = await r.json();
+              if (result.error) { alert(result.error); return; }
+              cachedAssets = null;
+              el.remove();
+              if (dropdown._value === item.value) {
+                dropdown._value = '';
+                dropdown.querySelector('.preview-selected').innerHTML = '<span class="preview-selected-text">— Select background video —</span><span class="preview-selected-arrow">&#x25BC;</span>';
+              }
+            },
           });
           bgVidSlot.appendChild(bgVidDropdown);
 
@@ -902,10 +976,10 @@
                 const resp = await fetch('/api/upload-bg', {method: 'POST', body: formData});
                 const result = await resp.json();
                 if (result.error) { alert(result.error); return; }
+                cachedAssets = null;
                 const type = fileInput.dataset.bgUpload;
                 const dropdown = row.querySelector(`[data-design-field="background-${type}"]`);
                 if (dropdown && dropdown._value !== undefined) {
-                  // Dynamically select the uploaded file
                   dropdown._value = result.filename;
                   const sel = dropdown.querySelector('.preview-selected');
                   const isVid = type === 'video';
@@ -930,14 +1004,68 @@
           row.appendChild(logoDropdown);
           container.appendChild(row);
         } else if (f.id === 'fontFamily') {
-          const fontOptions = assets.fonts.map(fn => `<option value="${fn}" ${fn === f.defaultValue ? 'selected' : ''}>${fn}</option>`).join('');
-          row.innerHTML = `
-            <div class="var-label"><span>${f.label}</span></div>
-            <select class="var-input" data-design-field="fontFamily" style="cursor:pointer;">
-              <option value="">— Default (${f.defaultValue || 'none'}) —</option>
-              ${fontOptions}
-            </select>`;
+          row.innerHTML = `<div class="var-label"><span>${f.label}</span></div>`;
+          // Font select dropdown
+          const fontSelect = document.createElement('select');
+          fontSelect.className = 'var-input';
+          fontSelect.dataset.designField = 'fontFamily';
+          fontSelect.style.cursor = 'pointer';
+          const defOpt = document.createElement('option');
+          defOpt.value = ''; defOpt.textContent = `— Default (${f.defaultValue || 'none'}) —`;
+          fontSelect.appendChild(defOpt);
+          for (const fn of assets.fonts) {
+            const opt = document.createElement('option');
+            opt.value = fn; opt.textContent = fn;
+            if (fn === f.defaultValue) opt.selected = true;
+            fontSelect.appendChild(opt);
+          }
+          row.appendChild(fontSelect);
+          // Font upload row
+          const fontUploadRow = document.createElement('div');
+          fontUploadRow.className = 'font-upload-row';
+          const fontUploadLabel = document.createElement('label');
+          fontUploadLabel.className = 'bg-upload-btn';
+          fontUploadLabel.style.marginTop = '0';
+          fontUploadLabel.style.flex = '1';
+          const fontFileInput = document.createElement('input');
+          fontFileInput.type = 'file';
+          fontFileInput.accept = '.ttf,.otf,.woff,.woff2';
+          fontUploadLabel.appendChild(fontFileInput);
+          fontUploadLabel.append('Upload font file');
+          fontUploadRow.appendChild(fontUploadLabel);
+          row.appendChild(fontUploadRow);
           container.appendChild(row);
+          // Font upload handler
+          fontFileInput.addEventListener('change', async () => {
+            if (!fontFileInput.files[0]) return;
+            const file = fontFileInput.files[0];
+            const stem = file.name.replace(/\.[^.]+$/, '');
+            const formData = new FormData();
+            formData.append('font', file);
+            formData.append('name', stem);
+            try {
+              fontUploadLabel.textContent = 'Uploading...';
+              const resp = await fetch('/api/upload-font', {method: 'POST', body: formData});
+              const result = await resp.json();
+              if (result.error) { alert(result.error); fontUploadLabel.textContent = 'Upload font file'; return; }
+              cachedAssets = null;
+              // Add to select and pick it
+              const existing = [...fontSelect.options].find(o => o.value === result.fontName);
+              if (!existing) {
+                const newOpt = document.createElement('option');
+                newOpt.value = result.fontName; newOpt.textContent = result.fontName;
+                fontSelect.appendChild(newOpt);
+              }
+              fontSelect.value = result.fontName;
+              fontUploadLabel.textContent = 'Uploaded: ' + result.fontName;
+              // Add delete button for new font in select
+              addFontDeleteBtn(fontSelect, result.fontName, fontUploadRow);
+            } catch (e) { alert('Font upload failed: ' + e.message); fontUploadLabel.textContent = 'Upload font file'; }
+          });
+          // Add delete buttons for existing uploaded fonts (not built-in like Chesna Grotesk)
+          for (const fn of assets.fonts) {
+            addFontDeleteBtn(fontSelect, fn, fontUploadRow);
+          }
         }
       }
     }

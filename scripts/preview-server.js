@@ -913,6 +913,41 @@ app.get("/api/templates", (_req, res) => {
   res.json({templates, categories: TEMPLATE_CATEGORIES});
 });
 
+// ── Delete background asset (image or video) ────────────────────────────────
+app.delete("/api/assets/bg/:filename", (req, res) => {
+  const filename = req.params.filename;
+  // Only allow files that start with bg- (never allow arbitrary deletes)
+  if (!filename || !/^bg-/i.test(filename) || filename.includes("..") || filename.includes("/")) {
+    return res.status(400).json({error: "Invalid filename"});
+  }
+  const filePath = path.join(PUBLIC_DIR, filename);
+  if (!fs.existsSync(filePath)) return res.status(404).json({error: "File not found"});
+  try {
+    fs.unlinkSync(filePath);
+    res.json({ok: true});
+  } catch (e) {
+    res.status(500).json({error: e.message});
+  }
+});
+
+// ── Delete font directory ────────────────────────────────────────────────────
+app.delete("/api/assets/font/:name", (req, res) => {
+  const name = req.params.name;
+  if (!name || name.includes("..") || name.includes("/") || name.includes("\\")) {
+    return res.status(400).json({error: "Invalid font name"});
+  }
+  const fontDir = path.join(PUBLIC_DIR, name);
+  if (!fs.existsSync(fontDir) || !fs.statSync(fontDir).isDirectory()) {
+    return res.status(404).json({error: "Font not found"});
+  }
+  try {
+    fs.rmSync(fontDir, {recursive: true, force: true});
+    res.json({ok: true});
+  } catch (e) {
+    res.status(500).json({error: e.message});
+  }
+});
+
 // ── Get template detail ─────────────────────────────────────────────────
 // ── Delete template ──────────────────────────────────────────────────────────
 app.delete("/api/templates/:name", (req, res) => {
